@@ -14,15 +14,20 @@ const app = express();
 app.use(express.json({ limit: '50mb' }));
 app.use(cors());
 
+const dbPort = process.env.DB_PORT ? parseInt(process.env.DB_PORT) : undefined;
+// Wenn ein Port explizit gesetzt ist, darf instanceName nicht verwendet werden (direkte TCP Verbindung)
+const dbInstance = dbPort ? undefined : (process.env.DB_INSTANCE || 'SQLEXPRESS');
+
 const config = {
     user: process.env.DB_USER || 'pxm',
     password: process.env.DB_PASSWORD || 'test1234',
     server: process.env.DB_SERVER || 'localhost',
     database: process.env.DB_DATABASE || 'pxm',
+    port: dbPort,
     options: {
         encrypt: false,
         trustServerCertificate: true,
-        instanceName: process.env.DB_INSTANCE || 'SQLEXPRESS',
+        instanceName: dbInstance,
         connectTimeout: 8000,
         useUTC: false
     }
