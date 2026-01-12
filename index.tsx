@@ -57,7 +57,7 @@ import '@fontsource/plus-jakarta-sans/800.css';
 import '@fontsource/jetbrains-mono/400.css';
 
 type DataRow = Record<string, any>;
-const API_BASE_URL = 'http://127.0.0.1:3001/api';
+const API_BASE_URL = `http://${window.location.hostname}:3001/api`;
 
 import { login, logout, getAccessToken, getUser, getRole } from './auth';
 
