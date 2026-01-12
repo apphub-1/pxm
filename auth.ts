@@ -1,7 +1,7 @@
 const TOKEN_KEY = 'pxm_auth_token';
 const USER_KEY = 'pxm_auth_user';
 const ROLE_KEY = 'pxm_auth_role';
-const API_BASE_URL = `http://${window.location.hostname}:3001/api`;
+const API_BASE_URL = '/api';
 
 export function getAccessToken() {
   return localStorage.getItem(TOKEN_KEY);
