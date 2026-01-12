@@ -304,7 +304,7 @@ async function getAdClient() {
     return adSearchClient;
 }
 
-app.get('/api/ad/search', authenticateToken, async (req, res) => {
+app.get('/api/directory/search', authenticateToken, async (req, res) => {
     const { q } = req.query;
     if (!q || String(q).length < 3) return res.json([]);
 

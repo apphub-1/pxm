@@ -218,14 +218,14 @@ const UserPicker = ({ label, value, onChange, tooltip, className, readOnly }: an
       try {
           const token = getAccessToken();
           const headers: HeadersInit = token ? { 'Authorization': `Bearer ${token}` } : {};
-          const res = await fetch(`${API_BASE_URL}/ad/search?q=${encodeURIComponent(val)}`, { headers });
+          const res = await fetch(`${API_BASE_URL}/directory/search?q=${encodeURIComponent(val)}`, { headers });
           if (res.ok) {
               const data = await res.json();
               setResults(data);
               setIsOpen(true);
           }
       } catch (e) {
-          console.error(e);
+          console.error("Search failed:", e);
       } finally {
           setLoading(false);
       }
@@ -319,14 +319,14 @@ const MultiUserPicker = ({ label, value, onChange, tooltip, className, readOnly 
       try {
           const token = getAccessToken();
           const headers: HeadersInit = token ? { 'Authorization': `Bearer ${token}` } : {};
-          const res = await fetch(`${API_BASE_URL}/ad/search?q=${encodeURIComponent(val)}`, { headers });
+          const res = await fetch(`${API_BASE_URL}/directory/search?q=${encodeURIComponent(val)}`, { headers });
           if (res.ok) {
               const data = await res.json();
               setResults(data);
               setIsOpen(true);
           }
       } catch (e) {
-          console.error(e);
+          console.error("Search failed:", e);
       } finally {
           setLoading(false);
       }
