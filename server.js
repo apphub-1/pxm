@@ -282,36 +282,54 @@ app.get('/api/health', async (req, res) => {
     }
 });
 
-app.get('/api/ad/search', authenticateToken, async (req, res) => {
-    const { q } = req.query;
-    if (!q || String(q).length < 3) return res.json([]);
+let adSearchClient = null;
+
+async function getAdClient() {
+    if (adSearchClient) return adSearchClient;
 
     const client = new Client({
         url: adConfig.url,
-        tlsOptions: { rejectUnauthorized: false }
+        tlsOptions: { rejectUnauthorized: false },
+        connectTimeout: 5000
     });
 
-    // Service User automatisch qualifizieren, falls kein UPN/Domain angegeben ist
     const serviceUserUpn = (AD_SERVICE_USER.includes('@') || AD_SERVICE_USER.includes('\\'))
         ? AD_SERVICE_USER
         : `${AD_SERVICE_USER}@${AD_DOMAIN}`;
 
+    console.log(`[AD] Establishing persistent connection...`);
+    await client.bind(serviceUserUpn, AD_SERVICE_PASS);
+    
+    // Reset client on error so next request reconnects
+    client.on('error', (err) => {
+        console.error('[AD] Connection error:', err);
+        adSearchClient = null;
+    });
+
+    adSearchClient = client;
+    return adSearchClient;
+}
+
+app.get('/api/ad/search', authenticateToken, async (req, res) => {
+    const { q } = req.query;
+    if (!q || String(q).length < 3) return res.json([]);
+
     try {
-        console.log(`[AD SEARCH] Binding to ${adConfig.url} with User: ${serviceUserUpn}`);
-        // Bind with service account to perform search
-        await client.bind(serviceUserUpn, AD_SERVICE_PASS);
+        let client;
+        try {
+            client = await getAdClient();
+        } catch (e) {
+            console.error("[AD] Connection failed:", e);
+            return res.json([]);
+        }
         
         const filter = `(&(objectClass=user)(|(sAMAccountName=*${q}*)(displayName=*${q}*)(mail=*${q}*)))`;
-        console.log(`[AD SEARCH] Filter: '${filter}' BaseDN: '${adConfig.baseDN}'`);
         
         const { searchEntries } = await client.search(adConfig.baseDN, {
             scope: 'sub',
             filter,
             attributes: ['sAMAccountName', 'displayName', 'mail', 'userPrincipalName']
         });
-        console.log(`[AD SEARCH] Success. ${searchEntries.length} results.`);
-
-        await client.unbind();
         
         const users = searchEntries.map(u => ({
             username: u.sAMAccountName,
@@ -322,11 +340,9 @@ app.get('/api/ad/search', authenticateToken, async (req, res) => {
 
         res.json(users);
     } catch (err) {
-        console.error('[AD SEARCH] Error:', err);
-        if (err.message && (err.message.includes('integrity checking') || err.message.includes('00002028'))) {
-            console.error('!!! WICHTIG: Der AD-Server verlangt LDAP-Signing. Bitte ändern Sie die AD_URL in der .env Datei auf "ldaps://..." (Port 636). !!!');
-        }
-        try { await client.unbind(); } catch (e) {}
+        console.error('[AD SEARCH] Error:', err.message);
+        // Force reconnect next time
+        adSearchClient = null;
         res.json([]); 
     }
 });
