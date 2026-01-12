@@ -186,6 +186,7 @@ const UserPicker = ({ label, value, onChange, tooltip, className, readOnly }: an
   const [loading, setLoading] = useState(false);
   const wrapperRef = React.useRef<HTMLDivElement>(null);
   const searchTimeout = React.useRef<any>(null);
+  const abortController = React.useRef<AbortController | null>(null);
 
   useEffect(() => {
     setQuery(value || '');
@@ -206,28 +207,33 @@ const UserPicker = ({ label, value, onChange, tooltip, className, readOnly }: an
     onChange(val); 
     
     if (searchTimeout.current) clearTimeout(searchTimeout.current);
+    if (abortController.current) abortController.current.abort(); // Alte Anfrage abbrechen
 
     if (val.length < 3) {
         setResults([]);
         setIsOpen(false);
+        setLoading(false);
         return;
     }
 
     searchTimeout.current = setTimeout(async () => {
       setLoading(true);
+      const controller = new AbortController();
+      abortController.current = controller;
+
       try {
           const token = getAccessToken();
           const headers: HeadersInit = token ? { 'Authorization': `Bearer ${token}` } : {};
-          const res = await fetch(`${API_BASE_URL}/directory/search?q=${encodeURIComponent(val)}`, { headers });
+          const res = await fetch(`${API_BASE_URL}/directory/search?q=${encodeURIComponent(val)}`, { headers, signal: controller.signal });
           if (res.ok) {
               const data = await res.json();
               setResults(data);
               setIsOpen(true);
           }
       } catch (e) {
-          console.error("Search failed:", e);
+          if ((e as Error).name !== 'AbortError') console.error("Search failed:", e);
       } finally {
-          setLoading(false);
+          if (abortController.current === controller) setLoading(false);
       }
     }, 300);
   };
@@ -288,9 +294,10 @@ const MultiUserPicker = ({ label, value, onChange, tooltip, className, readOnly 
   const [loading, setLoading] = useState(false);
   const wrapperRef = React.useRef<HTMLDivElement>(null);
   const searchTimeout = React.useRef<any>(null);
+  const abortController = React.useRef<AbortController | null>(null);
 
   const selectedUsers = useMemo(() => {
-      return value ? value.split(',').map((s: string) => s.trim()).filter(Boolean) : [];
+      return value ? value.split(';').map((s: string) => s.trim()).filter(Boolean) : [];
   }, [value]);
 
   useEffect(() => {
@@ -307,28 +314,33 @@ const MultiUserPicker = ({ label, value, onChange, tooltip, className, readOnly 
     setQuery(val);
     
     if (searchTimeout.current) clearTimeout(searchTimeout.current);
+    if (abortController.current) abortController.current.abort(); // Alte Anfrage abbrechen
 
     if (val.length < 3) {
         setResults([]);
         setIsOpen(false);
+        setLoading(false);
         return;
     }
     
     searchTimeout.current = setTimeout(async () => {
       setLoading(true);
+      const controller = new AbortController();
+      abortController.current = controller;
+
       try {
           const token = getAccessToken();
           const headers: HeadersInit = token ? { 'Authorization': `Bearer ${token}` } : {};
-          const res = await fetch(`${API_BASE_URL}/directory/search?q=${encodeURIComponent(val)}`, { headers });
+          const res = await fetch(`${API_BASE_URL}/directory/search?q=${encodeURIComponent(val)}`, { headers, signal: controller.signal });
           if (res.ok) {
               const data = await res.json();
               setResults(data);
               setIsOpen(true);
           }
       } catch (e) {
-          console.error("Search failed:", e);
+          if ((e as Error).name !== 'AbortError') console.error("Search failed:", e);
       } finally {
-          setLoading(false);
+          if (abortController.current === controller) setLoading(false);
       }
     }, 300);
   };
@@ -337,7 +349,7 @@ const MultiUserPicker = ({ label, value, onChange, tooltip, className, readOnly 
       const display = `${u.displayName} (${u.username})`;
       if (!selectedUsers.includes(display)) {
           const newUsers = [...selectedUsers, display];
-          onChange(newUsers.join(', '));
+          onChange(newUsers.join('; '));
       }
       setQuery('');
       setIsOpen(false);
@@ -345,7 +357,7 @@ const MultiUserPicker = ({ label, value, onChange, tooltip, className, readOnly 
 
   const removeUser = (userToRemove: string) => {
       const newUsers = selectedUsers.filter((u: string) => u !== userToRemove);
-      onChange(newUsers.join(', '));
+      onChange(newUsers.join('; '));
   };
 
   return (

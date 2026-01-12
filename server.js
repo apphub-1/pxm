@@ -317,12 +317,14 @@ app.get('/api/directory/search', authenticateToken, async (req, res) => {
             return res.json([]);
         }
         
-        const filter = `(&(objectClass=user)(|(sAMAccountName=*${q}*)(displayName=*${q}*)(mail=*${q}*)))`;
+        // Optimierung: Prefix-Suche (Nutzt AD-Indizes) statt Wildcard am Anfang
+        const filter = `(&(objectClass=user)(|(sAMAccountName=${q}*)(displayName=${q}*)(mail=${q}*)))`;
         
         const { searchEntries } = await client.search(adConfig.baseDN, {
             scope: 'sub',
             filter,
-            attributes: ['sAMAccountName', 'displayName', 'mail', 'userPrincipalName']
+            attributes: ['sAMAccountName', 'displayName', 'mail', 'userPrincipalName'],
+            sizeLimit: 20 // Begrenzung der Ergebnisse für Performance
         });
         
         const users = searchEntries.map(u => ({
