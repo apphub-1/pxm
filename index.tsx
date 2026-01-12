@@ -1,0 +1,2869 @@
+
+import React, { useState, useEffect, useMemo } from 'react';
+import { createRoot } from 'react-dom/client';
+import { 
+  Plus, 
+  Trash2,
+  Search, 
+  Edit2, 
+  Save, 
+  X, 
+  Database,
+  RefreshCw,
+  CheckCircle,
+  Network,
+  Lock,
+  Key,
+  Shield,
+  Link,
+  AlertTriangle,
+  Wifi,
+  WifiOff,
+  Settings,
+  ChevronDown,
+  Info,
+  Link2,
+  ShieldCheck,
+  FileCheck,
+  FileDown,
+  Server,
+  User,
+  Users,
+  LogIn,
+  LogOut,
+  History as HistoryIcon,
+  Clock,
+  FileText,
+  ChevronRight,
+  HelpCircle,
+  CheckSquare,
+  Square,
+  Download,
+  Rocket,
+  FileCog,
+  Layers,
+  KeyRound,
+  ClipboardList,
+  Cloud,
+  FileSpreadsheet
+} from 'lucide-react';
+import * as XLSX from 'xlsx';
+import './index.css';
+import '@fontsource/plus-jakarta-sans/400.css';
+import '@fontsource/plus-jakarta-sans/500.css';
+import '@fontsource/plus-jakarta-sans/600.css';
+import '@fontsource/plus-jakarta-sans/700.css';
+import '@fontsource/plus-jakarta-sans/800.css';
+import '@fontsource/jetbrains-mono/400.css';
+
+type DataRow = Record<string, any>;
+const API_BASE_URL = 'http://127.0.0.1:3001/api';
+
+import { login, logout, getAccessToken, getUser, getRole } from './auth';
+
+const DEFAULT_HEADERS = [
+  "ICTO", 
+  "Name", 
+  "Objektstatus", 
+  "Stereotyp", 
+  "tAV", 
+  "Kritikalität", 
+  "Anmerkung zur Variante", 
+  "Anbindungsvariante", 
+  "PAM-Relevanz",
+  "Protokollierung privilegierter Rechte auf Anwendungsebene",
+  "Protokollierung priviligierter Rechte für DB auf Server",
+  "Protokollierung priviligierter Rechte für Betriebssystem auf Server",
+  "Schnittstellendokument", 
+  "Workorder Abnahme", 
+  "Entzug privilegierte Berechtigungen",
+  "AbnahmePAMOnboarding"
+];
+
+const SELECT_OPTIONS: Record<string, string[]> = {
+  "Objektstatus": ["Plan", "Aktiv", "Stillgelegt"],
+  "Stereotyp": ["ExternalSystem_ASPSAAS", "InternalSystem", "CloudService"],
+  "Kritikalität": ["1-niedrig", "2-mittel", "3-hoch", "4-kritisch"],
+  "Anbindungsvariante": ["Variante 1", "Variante 2", "Variante 3", "Sonderlösung"],
+  "PAM-Relevanz": ["Ja", "Nein"],
+  "Protokollierung privilegierter Rechte auf Anwendungsebene": [
+    "Keine PAM-Anbindung - keine privilegierten Rechte",
+    "Keine PAM-Anbindung - Ausnahme gemäß Ausnahmeprozess",
+    "keine PAM-Anbindung - Externe Anwendung",
+    "Protokollierung privilegierter Rechte über CyberArk"
+  ],
+  "Protokollierung priviligierter Rechte für DB auf Server": [
+    "keine PAM-Anbindung für den eingesetzten Datenbanktyp",
+    "Keine PAM-Anbindung - keine privilegierten Rechte",
+    "Protokollierung privilegierter Rechte über CyberArk",
+    "keine PAM-Anbindung - Externe Anwendung"
+  ],
+  "Protokollierung priviligierter Rechte für Betriebssystem auf Server": [
+    "keine PAM-Anbindung für den eingesetzten Betriebssystemtyp",
+    "Keine PAM-Anbindung - keine privilegierten Rechte",
+    "Protokollierung privilegierter Rechte über CyberArk",
+    "keine PAM-Anbindung - Externe Anwendung"
+  ],
+  "Schnittstellendokument": ["Vorhanden", "Nicht vorhanden", "In Arbeit"],
+  "Entzug privilegierte Berechtigungen": ["erfolgt", "in Arbeit", "offen"]
+};
+
+const FIELD_GROUPS = [
+  {
+    title: "Stammdaten",
+    icon: <Info className="w-5 h-5 text-blue-500" />,
+    fields: ["ICTO", "Name", "Kurzname", "Objektstatus", "Stereotyp", "Kritikalität", "tAV", "Stellvertreter tAV", "fAV", "Betriebsverantwortlicher", "Objektpflege"]
+  },
+  {
+    title: "Anbindung & Relevanz",
+    icon: <Link2 className="w-5 h-5 text-indigo-500" />,
+    fields: ["Anbindungsvariante", "PAM-Relevanz", "Anmerkung zur Variante"]
+  },
+  {
+    title: "Protokollierung (Compliance)",
+    icon: <ShieldCheck className="w-5 h-5 text-emerald-500" />,
+    fields: [
+      "Protokollierung privilegierter Rechte auf Anwendungsebene",
+      "Protokollierung priviligierter Rechte für DB auf Server",
+      "Protokollierung priviligierter Rechte für Betriebssystem auf Server"
+    ]
+  },
+  {
+    title: "Dokumentation & Abschluss",
+    icon: <FileCheck className="w-5 h-5 text-amber-500" />,
+    fields: ["Schnittstellendokument", "Workorder Abnahme", "Entzug privilegierte Berechtigungen"]
+  }
+];
+
+// --- Onboarding Types & Components ---
+
+type OnboardingData = Record<string, any>;
+
+const ONBOARDING_SECTIONS = [
+  { id: 'architecture', title: '1. Architektur', icon: <Database className="w-5 h-5" /> },
+  { id: 'technology', title: '2. Anwendungstechnologie', icon: <Settings className="w-5 h-5" /> },
+  { id: 'login', title: '3. Anmeldeverfahren', icon: <LogIn className="w-5 h-5" /> },
+  { id: 'password', title: '4. Passwortwechsel', icon: <ShieldCheck className="w-5 h-5" /> },
+  { id: 'test', title: '5. Testuser und Testumgebung', icon: <FileCheck className="w-5 h-5" /> },
+  { id: 'emergency', title: '6. Notfallprozess', icon: <AlertTriangle className="w-5 h-5" /> },
+  { id: 'matrix', title: '7. Vereinbarte Anbindungsvariante', icon: <Link2 className="w-5 h-5" /> },
+];
+
+const TECHNICAL_SECTIONS = [
+  { id: 'servers', title: '1. Server / Betriebssysteme', icon: <Server className="w-5 h-5" /> },
+  { id: 'databases', title: '2. Datenbanken / Server', icon: <Database className="w-5 h-5" /> },
+  { id: 'ports', title: '3. Portfreischaltungen', icon: <Network className="w-5 h-5" /> },
+  { id: 'safes', title: '4. Safe-Struktur (CyberArk)', icon: <Lock className="w-5 h-5" /> },
+  { id: 'safeMembers', title: '5. Mitglieder der Safes', icon: <Users className="w-5 h-5" /> },
+  { id: 'sharedAccounts', title: '6. Shared Accounts', icon: <Key className="w-5 h-5" /> },
+  { id: 'permissions', title: '7. Berechtigungszuordnungen', icon: <Shield className="w-5 h-5" /> },
+  { id: 'mapping', title: '8. Shared Accounts zu Safe', icon: <Link className="w-5 h-5" /> },
+];
+
+const SECRETS_SECTIONS = [
+  { id: 'inventory', title: '1. Secret Inventory', icon: <KeyRound className="w-5 h-5" /> },
+  { id: 'safes', title: '2. Safe- / Pfad-Struktur', icon: <Lock className="w-5 h-5" /> },
+  { id: 'members', title: '3. Mitglieder der Safes', icon: <Users className="w-5 h-5" /> },
+  { id: 'mapping', title: '4. Secrets zu Safe', icon: <Link className="w-5 h-5" /> },
+];
+
+const SECRETS_ONBOARDING_SECTIONS = [
+  { id: 'infrastructure', title: '1. Infrastruktur', icon: <Server className="w-5 h-5" /> },
+  { id: 'tools', title: '2. Tool-Nutzung', icon: <Settings className="w-5 h-5" /> },
+  { id: 'container_standalone', title: '3. Container – Standalone', icon: <Database className="w-5 h-5" /> },
+  { id: 'container_k8s', title: '4. Container – Kubernetes / OpenShift', icon: <Cloud className="w-5 h-5" /> },
+  { id: 'cloud', title: '5. Cloud Computing', icon: <Cloud className="w-5 h-5" /> },
+  { id: 'server', title: '6. Server', icon: <Server className="w-5 h-5" /> },
+  { id: 'properties', title: '7. Eigenschaften der Secrets', icon: <Key className="w-5 h-5" /> },
+  { id: 'rotation_status', title: '8. Rotation – Ist-Status', icon: <RefreshCw className="w-5 h-5" /> },
+  { id: 'target_image', title: '9. Anbindungsvariante (Zielbild)', icon: <Link2 className="w-5 h-5" /> },
+];
+
+const UserPicker = ({ label, value, onChange, tooltip, className, readOnly }: any) => {
+  const [query, setQuery] = useState(value || '');
+  const [results, setResults] = useState<any[]>([]);
+  const [isOpen, setIsOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const wrapperRef = React.useRef<HTMLDivElement>(null);
+  const searchTimeout = React.useRef<any>(null);
+
+  useEffect(() => {
+    setQuery(value || '');
+  }, [value]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: any) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [wrapperRef]);
+
+  const handleSearch = (val: string) => {
+    setQuery(val);
+    onChange(val); 
+    
+    if (searchTimeout.current) clearTimeout(searchTimeout.current);
+
+    if (val.length < 3) {
+        setResults([]);
+        setIsOpen(false);
+        return;
+    }
+
+    searchTimeout.current = setTimeout(async () => {
+      setLoading(true);
+      try {
+          const token = getAccessToken();
+          const headers: HeadersInit = token ? { 'Authorization': `Bearer ${token}` } : {};
+          const res = await fetch(`${API_BASE_URL}/ad/search?q=${encodeURIComponent(val)}`, { headers });
+          if (res.ok) {
+              const data = await res.json();
+              setResults(data);
+              setIsOpen(true);
+          }
+      } catch (e) {
+          console.error(e);
+      } finally {
+          setLoading(false);
+      }
+    }, 300);
+  };
+
+  const selectUser = (u: any) => {
+      const display = `${u.displayName} (${u.username})`;
+      setQuery(display);
+      onChange(display);
+      setIsOpen(false);
+  };
+
+  return (
+    <div className={`relative ${className || 'mb-4'}`} ref={wrapperRef}>
+      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1 flex items-center gap-2">
+        {label}
+        {tooltip && <div className="group relative"><HelpCircle className="w-3 h-3 text-slate-400 cursor-help" /><div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-slate-800 text-white text-xs rounded hidden group-hover:block z-50">{tooltip}</div></div>}
+      </label>
+      <div className="relative">
+        <input 
+            type="text" 
+            className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-medium pr-10"
+            value={query}
+            onChange={e => handleSearch(e.target.value)}
+            onFocus={() => query.length >= 3 && setIsOpen(true)}
+            placeholder="Name oder Kennung suchen..."
+            disabled={readOnly}
+        />
+        <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">
+            {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <User className="w-4 h-4" />}
+        </div>
+      </div>
+      
+      {isOpen && results.length > 0 && (
+          <div className="absolute z-50 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-xl max-h-60 overflow-y-auto custom-scrollbar">
+              {results.map((u: any) => (
+                  <div 
+                    key={u.username} 
+                    className="p-3 hover:bg-indigo-50 cursor-pointer border-b border-slate-50 last:border-0"
+                    onClick={() => selectUser(u)}
+                  >
+                      <div className="font-bold text-sm text-slate-800">{u.displayName}</div>
+                      <div className="text-xs text-slate-500 flex gap-2">
+                          <span>{u.username}</span>
+                          {u.email && <span>• {u.email}</span>}
+                      </div>
+                  </div>
+              ))}
+          </div>
+      )}
+    </div>
+  );
+};
+
+const MultiUserPicker = ({ label, value, onChange, tooltip, className, readOnly }: any) => {
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState<any[]>([]);
+  const [isOpen, setIsOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const wrapperRef = React.useRef<HTMLDivElement>(null);
+  const searchTimeout = React.useRef<any>(null);
+
+  const selectedUsers = useMemo(() => {
+      return value ? value.split(',').map((s: string) => s.trim()).filter(Boolean) : [];
+  }, [value]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: any) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [wrapperRef]);
+
+  const handleSearch = (val: string) => {
+    setQuery(val);
+    
+    if (searchTimeout.current) clearTimeout(searchTimeout.current);
+
+    if (val.length < 3) {
+        setResults([]);
+        setIsOpen(false);
+        return;
+    }
+    
+    searchTimeout.current = setTimeout(async () => {
+      setLoading(true);
+      try {
+          const token = getAccessToken();
+          const headers: HeadersInit = token ? { 'Authorization': `Bearer ${token}` } : {};
+          const res = await fetch(`${API_BASE_URL}/ad/search?q=${encodeURIComponent(val)}`, { headers });
+          if (res.ok) {
+              const data = await res.json();
+              setResults(data);
+              setIsOpen(true);
+          }
+      } catch (e) {
+          console.error(e);
+      } finally {
+          setLoading(false);
+      }
+    }, 300);
+  };
+
+  const addUser = (u: any) => {
+      const display = `${u.displayName} (${u.username})`;
+      if (!selectedUsers.includes(display)) {
+          const newUsers = [...selectedUsers, display];
+          onChange(newUsers.join(', '));
+      }
+      setQuery('');
+      setIsOpen(false);
+  };
+
+  const removeUser = (userToRemove: string) => {
+      const newUsers = selectedUsers.filter((u: string) => u !== userToRemove);
+      onChange(newUsers.join(', '));
+  };
+
+  return (
+    <div className={`relative ${className || 'mb-4'}`} ref={wrapperRef}>
+      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1 flex items-center gap-2">
+        {label}
+        {tooltip && <div className="group relative"><HelpCircle className="w-3 h-3 text-slate-400 cursor-help" /><div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-slate-800 text-white text-xs rounded hidden group-hover:block z-50">{tooltip}</div></div>}
+      </label>
+      
+      <div className="flex flex-wrap gap-2 mb-2">
+          {selectedUsers.map((u: string) => (
+              <div key={u} className="bg-indigo-50 text-indigo-700 px-2 py-1 rounded-md text-xs font-bold flex items-center gap-1 border border-indigo-100">
+                  {u}
+                  {!readOnly && <button onClick={() => removeUser(u)} className="hover:text-indigo-900"><X className="w-3 h-3" /></button>}
+              </div>
+          ))}
+      </div>
+
+      <div className="relative">
+        <input 
+            type="text" 
+            className={`w-full p-2.5 bg-slate-50 border border-slate-200 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-medium pr-10 ${readOnly ? 'cursor-not-allowed opacity-60' : ''}`}
+            value={query}
+            onChange={e => handleSearch(e.target.value)}
+            onFocus={() => !readOnly && query.length >= 3 && setIsOpen(true)}
+            placeholder={readOnly ? "Keine Bearbeitung möglich" : "Benutzer hinzufügen..."}
+            disabled={readOnly}
+        />
+        <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">
+            {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+        </div>
+      </div>
+      
+      {isOpen && results.length > 0 && (
+          <div className="absolute z-50 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-xl max-h-60 overflow-y-auto custom-scrollbar">
+              {results.map((u: any) => (
+                  <div 
+                    key={u.username} 
+                    className="p-3 hover:bg-indigo-50 cursor-pointer border-b border-slate-50 last:border-0"
+                    onClick={() => addUser(u)}
+                  >
+                      <div className="font-bold text-sm text-slate-800">{u.displayName}</div>
+                      <div className="text-xs text-slate-500 flex gap-2">
+                          <span>{u.username}</span>
+                          {u.email && <span>• {u.email}</span>}
+                      </div>
+                  </div>
+              ))}
+          </div>
+      )}
+    </div>
+  );
+};
+
+const UnifiedAppModal = ({ 
+  isOpen, 
+  onClose, 
+  governanceRow, 
+  user,
+  initialTab = 'onboarding',
+  mode = 'pam',
+  readOnly = false
+}: { 
+  isOpen: boolean; 
+  onClose: () => void; 
+  governanceRow: DataRow; 
+  user: string | null;
+  initialTab?: 'onboarding' | 'technical' | 'secrets' | 'secrets-onboarding';
+  mode?: 'pam' | 'secrets';
+  readOnly?: boolean;
+}) => {
+  const [activeTab, setActiveTab] = useState<'onboarding' | 'technical' | 'secrets' | 'secrets-onboarding'>(initialTab);
+
+  // --- Onboarding State ---
+  const [onboardingData, setOnboardingData] = useState<OnboardingData>({});
+  const [onboardingOpenSections, setOnboardingOpenSections] = useState<Record<string, boolean>>(
+    ONBOARDING_SECTIONS.reduce((acc, s) => ({ ...acc, [s.id]: true }), {})
+  );
+  const [onboardingLoading, setOnboardingLoading] = useState(false);
+  const [onboardingSaving, setOnboardingSaving] = useState(false);
+  const [onboardingViewMode, setOnboardingViewMode] = useState<'form' | 'history'>('form');
+  const [onboardingHistory, setOnboardingHistory] = useState<any[]>([]);
+  const [onboardingLoaded, setOnboardingLoaded] = useState(false);
+
+  // --- Technical State ---
+  const [technicalData, setTechnicalData] = useState<Record<string, any[]>>({
+    servers: [], databases: [], ports: [], safes: [], safeMembers: [], sharedAccounts: [], permissions: [], mapping: []
+  });
+  const [technicalOpenSections, setTechnicalOpenSections] = useState<Record<string, boolean>>(
+    TECHNICAL_SECTIONS.reduce((acc, s) => ({ ...acc, [s.id]: true }), {})
+  );
+  const [technicalLoading, setTechnicalLoading] = useState(false);
+  const [technicalSaving, setTechnicalSaving] = useState(false);
+  const [technicalViewMode, setTechnicalViewMode] = useState<'form' | 'history'>('form');
+  const [technicalHistory, setTechnicalHistory] = useState<any[]>([]);
+  const [technicalLoaded, setTechnicalLoaded] = useState(false);
+
+  // --- Secrets State ---
+  const [secretsData, setSecretsData] = useState<Record<string, any[]>>({
+    inventory: [], safes: [], members: [], mapping: []
+  });
+  const [secretsOpenSections, setSecretsOpenSections] = useState<Record<string, boolean>>(
+    SECRETS_SECTIONS.reduce((acc, s) => ({ ...acc, [s.id]: true }), {})
+  );
+  const [secretsLoading, setSecretsLoading] = useState(false);
+  const [secretsSaving, setSecretsSaving] = useState(false);
+  const [secretsViewMode, setSecretsViewMode] = useState<'form' | 'history'>('form');
+  const [secretsHistory, setSecretsHistory] = useState<any[]>([]);
+  const [secretsLoaded, setSecretsLoaded] = useState(false);
+
+  // --- Secrets Onboarding State ---
+  const [secretsOnboardingData, setSecretsOnboardingData] = useState<Record<string, any>>({});
+  const [secretsOnboardingOpenSections, setSecretsOnboardingOpenSections] = useState<Record<string, boolean>>(
+    SECRETS_ONBOARDING_SECTIONS.reduce((acc, s) => ({ ...acc, [s.id]: true }), {})
+  );
+  const [secretsOnboardingLoading, setSecretsOnboardingLoading] = useState(false);
+  const [secretsOnboardingSaving, setSecretsOnboardingSaving] = useState(false);
+  const [secretsOnboardingViewMode, setSecretsOnboardingViewMode] = useState<'form' | 'history'>('form');
+  const [secretsOnboardingHistory, setSecretsOnboardingHistory] = useState<any[]>([]);
+  const [secretsOnboardingLoaded, setSecretsOnboardingLoaded] = useState(false);
+
+  useEffect(() => {
+    if (isOpen && governanceRow.id) {
+        if (activeTab === 'onboarding' && !onboardingLoaded) {
+            loadOnboardingData();
+        } else if (activeTab === 'technical' && !technicalLoaded) {
+            loadTechnicalData();
+        } else if (activeTab === 'secrets' && !secretsLoaded) {
+            loadSecretsData();
+        } else if (activeTab === 'secrets-onboarding' && !secretsOnboardingLoaded) {
+            loadSecretsOnboardingData();
+        }
+    }
+  }, [activeTab, isOpen, governanceRow, onboardingLoaded, technicalLoaded, secretsLoaded, secretsOnboardingLoaded]);
+
+  useEffect(() => {
+    const { matrixLogin, matrixPwChange } = onboardingData;
+    if (matrixLogin && matrixPwChange) {
+      let variant = '';
+      if (matrixLogin === 'Automatisch' && matrixPwChange === 'Automatisch') {
+        variant = 'Anbindungsvariante 3';
+      } else if (matrixLogin === 'Manuell' && matrixPwChange === 'Manuell') {
+        variant = 'Anbindungsvariante 1';
+      } else {
+        variant = 'Anbindungsvariante 2';
+      }
+      
+      if (onboardingData.selectedVariant !== variant) {
+        setOnboardingData(prev => ({ ...prev, selectedVariant: variant }));
+      }
+    }
+  }, [onboardingData.matrixLogin, onboardingData.matrixPwChange]);
+
+  const loadOnboardingData = async () => {
+    setOnboardingLoading(true);
+    try {
+      const token = getAccessToken();
+      const headers: HeadersInit = token ? { 'Authorization': `Bearer ${token}` } : {};
+      const res = await fetch(`${API_BASE_URL}/onboarding/${governanceRow.id}`, { headers });
+      if (res.ok) {
+        const json = await res.json();
+        // Pre-fill some data from governance row if empty
+        if (!json.data) {
+            setOnboardingData({});
+        } else {
+            setOnboardingData(JSON.parse(json.data));
+        }
+        setOnboardingLoaded(true);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setOnboardingLoading(false);
+    }
+  };
+
+  const loadTechnicalData = async () => {
+    setTechnicalLoading(true);
+    try {
+      const token = getAccessToken();
+      const headers: HeadersInit = token ? { 'Authorization': `Bearer ${token}` } : {};
+      const res = await fetch(`${API_BASE_URL}/technical/${governanceRow.id}`, { headers });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.data) {
+            setTechnicalData(JSON.parse(json.data));
+        }
+        setTechnicalLoaded(true);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setTechnicalLoading(false);
+    }
+  };
+
+  const loadSecretsData = async () => {
+    setSecretsLoading(true);
+    try {
+      const token = getAccessToken();
+      const headers: HeadersInit = token ? { 'Authorization': `Bearer ${token}` } : {};
+      const res = await fetch(`${API_BASE_URL}/secrets/${governanceRow.id}`, { headers });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.data) {
+            setSecretsData(JSON.parse(json.data));
+        }
+        setSecretsLoaded(true);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setSecretsLoading(false);
+    }
+  };
+
+  const loadSecretsOnboardingData = async () => {
+    setSecretsOnboardingLoading(true);
+    try {
+      const token = getAccessToken();
+      const headers: HeadersInit = token ? { 'Authorization': `Bearer ${token}` } : {};
+      const res = await fetch(`${API_BASE_URL}/secrets-onboarding/${governanceRow.id}`, { headers });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.data) {
+            setSecretsOnboardingData(JSON.parse(json.data));
+        }
+        setSecretsOnboardingLoaded(true);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setSecretsOnboardingLoading(false);
+    }
+  };
+
+  const handleOnboardingSave = async () => {
+    setOnboardingSaving(true);
+    try {
+      const token = getAccessToken();
+      const headers: HeadersInit = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      
+      await fetch(`${API_BASE_URL}/onboarding/${governanceRow.id}`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(onboardingData)
+      });
+      alert("Onboarding Daten gespeichert.");
+    } catch (e) {
+      alert("Fehler beim Speichern.");
+    } finally {
+      setOnboardingSaving(false);
+    }
+  };
+
+  const handleTechnicalSave = async () => {
+    setTechnicalSaving(true);
+    try {
+      const token = getAccessToken();
+      const headers: HeadersInit = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      
+      await fetch(`${API_BASE_URL}/technical/${governanceRow.id}`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(technicalData)
+      });
+      alert("Technische Struktur gespeichert.");
+    } catch (e) {
+      alert("Fehler beim Speichern.");
+    } finally {
+      setTechnicalSaving(false);
+    }
+  };
+
+  const handleSecretsSave = async () => {
+    setSecretsSaving(true);
+    try {
+      const token = getAccessToken();
+      const headers: HeadersInit = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      
+      await fetch(`${API_BASE_URL}/secrets/${governanceRow.id}`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(secretsData)
+      });
+      alert("Secrets Management gespeichert.");
+    } catch (e) {
+      alert("Fehler beim Speichern.");
+    } finally {
+      setSecretsSaving(false);
+    }
+  };
+
+  const handleSecretsOnboardingSave = async () => {
+    setSecretsOnboardingSaving(true);
+    try {
+      const token = getAccessToken();
+      const headers: HeadersInit = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      
+      await fetch(`${API_BASE_URL}/secrets-onboarding/${governanceRow.id}`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(secretsOnboardingData)
+      });
+      alert("Onboarding Secrets Management gespeichert.");
+    } catch (e) {
+      alert("Fehler beim Speichern.");
+    } finally {
+      setSecretsOnboardingSaving(false);
+    }
+  };
+
+  const loadOnboardingHistory = async () => {
+    try {
+      const token = getAccessToken();
+      const headers: HeadersInit = token ? { 'Authorization': `Bearer ${token}` } : {};
+      const response = await fetch(`${API_BASE_URL}/history/${governanceRow.id}`, { headers });
+      if (response.ok) {
+        const allHistory = await response.json();
+        setOnboardingHistory(allHistory.filter((h: any) => h.action.includes('ONBOARDING')));
+      }
+    } catch (e) {
+      console.error("History load failed", e);
+    }
+  };
+
+  const loadTechnicalHistory = async () => {
+    try {
+      const token = getAccessToken();
+      const headers: HeadersInit = token ? { 'Authorization': `Bearer ${token}` } : {};
+      const response = await fetch(`${API_BASE_URL}/history/${governanceRow.id}`, { headers });
+      if (response.ok) {
+        const allHistory = await response.json();
+        setTechnicalHistory(allHistory.filter((h: any) => h.action.includes('TECHNICAL')));
+      }
+    } catch (e) {
+      console.error("History load failed", e);
+    }
+  };
+
+  const loadSecretsHistory = async () => {
+    try {
+      const token = getAccessToken();
+      const headers: HeadersInit = token ? { 'Authorization': `Bearer ${token}` } : {};
+      const response = await fetch(`${API_BASE_URL}/history/${governanceRow.id}`, { headers });
+      if (response.ok) {
+        const allHistory = await response.json();
+        setSecretsHistory(allHistory.filter((h: any) => h.action.includes('SECRETS')));
+      }
+    } catch (e) {
+      console.error("History load failed", e);
+    }
+  };
+
+  const loadSecretsOnboardingHistory = async () => {
+    try {
+      const token = getAccessToken();
+      const headers: HeadersInit = token ? { 'Authorization': `Bearer ${token}` } : {};
+      const response = await fetch(`${API_BASE_URL}/history/${governanceRow.id}`, { headers });
+      if (response.ok) {
+        const allHistory = await response.json();
+        setSecretsOnboardingHistory(allHistory.filter((h: any) => h.action.includes('SECRETS_ONB')));
+      }
+    } catch (e) {
+      console.error("History load failed", e);
+    }
+  };
+
+  const toggleOnboardingSection = (id: string) => {
+    setOnboardingOpenSections(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const toggleTechnicalSection = (id: string) => {
+    setTechnicalOpenSections(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const toggleSecretsSection = (id: string) => {
+    setSecretsOpenSections(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const toggleSecretsOnboardingSection = (id: string) => {
+    setSecretsOnboardingOpenSections(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const updateField = (field: string, value: any) => {
+    setOnboardingData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const renderInput = (label: string, field: string, type = 'text', tooltip?: string, options?: string[]) => (
+    <div className="mb-4">
+      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1 flex items-center gap-2">
+        {label}
+        {tooltip && <div className="group relative"><HelpCircle className="w-3 h-3 text-slate-400 cursor-help" /><div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-slate-800 text-white text-xs rounded hidden group-hover:block z-50">{tooltip}</div></div>}
+      </label>
+      {options ? (
+        <select 
+            className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-medium"
+            value={onboardingData[field] || ''}
+            onChange={e => updateField(field, e.target.value)}
+            disabled={readOnly}
+        >
+            <option value="">Bitte wählen...</option>
+            {options.map(o => <option key={o} value={o}>{o}</option>)}
+        </select>
+      ) : (
+        <input 
+            type={type} 
+            className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-medium"
+            value={onboardingData[field] || ''}
+            onChange={e => updateField(field, e.target.value)}
+            disabled={readOnly}
+        />
+      )}
+    </div>
+  );
+
+  const renderCheckbox = (label: string, field: string) => (
+      <div className={`mb-4 flex items-center gap-3 ${readOnly ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`} onClick={() => !readOnly && updateField(field, !onboardingData[field])}>
+          {onboardingData[field] ? <CheckSquare className="w-5 h-5 text-indigo-600" /> : <Square className="w-5 h-5 text-slate-300" />}
+          <span className="text-sm font-medium text-slate-700">{label}</span>
+      </div>
+  );
+
+  const renderUserPicker = (label: string, field: string, tooltip?: string) => (
+      <UserPicker 
+        label={label} 
+        value={onboardingData[field]} 
+        onChange={(val: string) => updateField(field, val)} 
+        tooltip={tooltip} 
+        readOnly={readOnly}
+      />
+  );
+
+  const updateSecretsOnboardingField = (field: string, value: any) => {
+    setSecretsOnboardingData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const renderSecretsOnboardingInput = (label: string, field: string, type = 'text', tooltip?: string, options?: string[]) => (
+    <div className="mb-4">
+      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1 flex items-center gap-2">
+        {label}
+        {tooltip && <div className="group relative"><HelpCircle className="w-3 h-3 text-slate-400 cursor-help" /><div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-slate-800 text-white text-xs rounded hidden group-hover:block z-50">{tooltip}</div></div>}
+      </label>
+      {options ? (
+        <select 
+            className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-medium"
+            value={secretsOnboardingData[field] || ''}
+            onChange={e => updateSecretsOnboardingField(field, e.target.value)}
+            disabled={readOnly}
+        >
+            <option value="">Bitte wählen...</option>
+            {options.map(o => <option key={o} value={o}>{o}</option>)}
+        </select>
+      ) : (
+        <input 
+            type={type} 
+            className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-medium"
+            value={secretsOnboardingData[field] || ''}
+            onChange={e => updateSecretsOnboardingField(field, e.target.value)}
+            disabled={readOnly}
+        />
+      )}
+    </div>
+  );
+
+  const renderSecretsOnboardingMultiSelect = (label: string, field: string, options: string[]) => {
+      const currentValues = (secretsOnboardingData[field] as string[]) || [];
+      const toggleValue = (val: string) => {
+          const newValues = currentValues.includes(val)
+              ? currentValues.filter(v => v !== val)
+              : [...currentValues, val];
+          updateSecretsOnboardingField(field, newValues);
+      };
+
+      return (
+          <div className="mb-4">
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">{label}</label>
+              <div className="space-y-2">
+                  {options.map(opt => (
+                      <div key={opt} className={`flex items-center gap-2 p-1 rounded ${readOnly ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer hover:bg-slate-50'}`} onClick={() => !readOnly && toggleValue(opt)}>
+                          {currentValues.includes(opt) ? <CheckSquare className="w-4 h-4 text-indigo-600" /> : <Square className="w-4 h-4 text-slate-300" />}
+                          <span className="text-sm text-slate-700">{opt}</span>
+                      </div>
+                  ))}
+              </div>
+          </div>
+      );
+  };
+
+  const renderMatrix = () => {
+      const variants = ['Anbindungsvariante 1', 'Anbindungsvariante 2', 'Anbindungsvariante 3'];
+      const criticalities = ['1-niedrig', '2-mittel', '3-hoch', '4-kritisch'];
+      const currentCriticality = governanceRow['Kritikalität'];
+      
+      return (
+          <div className="overflow-x-auto">
+              <table className="w-full border-collapse text-sm">
+                  <thead>
+                      <tr>
+                          <th className="p-3 border border-slate-200 bg-slate-50 text-left">Kritikalität</th>
+                          {variants.map(v => <th key={v} className={`p-3 border border-slate-200 bg-slate-50 ${v.includes('3') ? 'bg-indigo-50 text-indigo-700' : ''}`}>{v}</th>)}
+                      </tr>
+                  </thead>
+                  <tbody>
+                      {criticalities.map(crit => (
+                          <tr key={crit}>
+                              <td className="p-3 border border-slate-200 font-bold text-slate-600">{crit}</td>
+                              {variants.map(v => {
+                                  const isSelected = onboardingData.selectedVariant === v && currentCriticality === crit;
+                                  return (
+                                      <td 
+                                        key={v} 
+                                        className={`p-3 border border-slate-200 text-center transition-colors ${isSelected ? 'bg-emerald-50 ring-2 ring-inset ring-emerald-500' : (currentCriticality === crit ? 'bg-slate-50' : '')} ${readOnly ? 'pointer-events-none' : ''}`}
+                                      >
+                                          {isSelected && <CheckCircle className="w-5 h-5 text-emerald-500 mx-auto" />}
+                                      </td>
+                                  );
+                              })}
+                          </tr>
+                      ))}
+                  </tbody>
+              </table>
+              <div className="mt-4 p-4 bg-indigo-50 rounded-xl border border-indigo-100">
+                  <p className="text-sm font-bold text-indigo-900">Ausgewählte Konfiguration:</p>
+                  <p className="text-indigo-700">
+                    {currentCriticality ? `Kritikalität: ${currentCriticality}` : 'Keine Kritikalität gewählt'} 
+                    {' ➜ '} 
+                    {onboardingData.selectedVariant || 'Bitte Konfiguration wählen'}
+                  </p>
+              </div>
+          </div>
+      );
+  };
+
+  const updateTechnicalRow = (section: string, index: number, field: string, value: any) => {
+    setTechnicalData(prev => {
+      const newList = [...(prev[section] || [])];
+      newList[index] = { ...newList[index], [field]: value };
+      return { ...prev, [section]: newList };
+    });
+  };
+
+  const addTechnicalRow = (section: string) => {
+    setTechnicalData(prev => ({ ...prev, [section]: [...(prev[section] || []), {}] }));
+  };
+
+  const removeTechnicalRow = (section: string, index: number) => {
+    setTechnicalData(prev => {
+      const newList = [...(prev[section] || [])];
+      newList.splice(index, 1);
+      return { ...prev, [section]: newList };
+    });
+  };
+
+  const renderTable = (sectionId: string, columns: { key: string, label: string, type?: string, options?: string[], width?: string, required?: boolean }[]) => {
+    const rows = technicalData[sectionId] || [];
+    return (
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm border-collapse">
+          <thead>
+            <tr className="bg-slate-50 border-b border-slate-200">
+              {columns.map(col => (
+                <th key={col.key} className="p-3 text-left font-bold text-slate-600 whitespace-nowrap" style={{ minWidth: col.width }}>
+                  {col.label} {col.required && <span className="text-rose-500">*</span>}
+                </th>
+              ))}
+              <th className="p-3 w-10"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row, idx) => (
+              <tr key={idx} className="border-b border-slate-100 hover:bg-slate-50/50">
+                {columns.map(col => (
+                  <td key={col.key} className="p-2" style={{ minWidth: col.width }}>
+                    {col.type === 'select' ? (
+                      <select 
+                        className={`w-full p-2 bg-white border rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 ${col.required && !row[col.key] ? 'border-rose-300' : 'border-slate-200'}`}
+                        value={row[col.key] || ''}
+                        onChange={e => updateTechnicalRow(sectionId, idx, col.key, e.target.value)}
+                        disabled={readOnly}
+                      >
+                        <option value="">-</option>
+                        {col.options?.map(o => <option key={o} value={o}>{o}</option>)}
+                      </select>
+                    ) : col.type === 'checkbox' ? (
+                      <div className="flex justify-center">
+                        <input 
+                          type="checkbox" 
+                          className="w-5 h-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                          checked={!!row[col.key]}
+                          onChange={e => updateTechnicalRow(sectionId, idx, col.key, e.target.checked)}
+                          disabled={readOnly}
+                        />
+                      </div>
+                    ) : (
+                      <input 
+                        type={col.type || 'text'}
+                        className={`w-full p-2 bg-white border rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 ${col.required && !row[col.key] ? 'border-rose-300' : 'border-slate-200'}`}
+                        value={row[col.key] || ''}
+                        onChange={e => updateTechnicalRow(sectionId, idx, col.key, e.target.value)}
+                        placeholder={col.label}
+                        disabled={readOnly}
+                      />
+                    )}
+                  </td>
+                ))}
+                <td className="p-2 text-center">
+                  {!readOnly && (
+                  <button onClick={() => removeTechnicalRow(sectionId, idx)} className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors">
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                  )}
+                </td>
+              </tr>
+            ))}
+            {rows.length === 0 && (
+              <tr>
+                <td colSpan={columns.length + 1} className="p-4 text-center text-slate-400 italic">Keine Einträge vorhanden.</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+        {!readOnly && (
+        <button onClick={() => addTechnicalRow(sectionId)} className="mt-3 flex items-center gap-2 text-sm font-bold text-indigo-600 hover:text-indigo-700 px-3 py-2 hover:bg-indigo-50 rounded-lg transition-colors">
+          <Plus className="w-4 h-4" /> Zeile hinzufügen
+        </button>
+        )}
+      </div>
+    );
+  };
+
+  const updateSecretsRow = (section: string, index: number, field: string, value: any) => {
+    setSecretsData(prev => {
+      const newList = [...(prev[section] || [])];
+      newList[index] = { ...newList[index], [field]: value };
+      return { ...prev, [section]: newList };
+    });
+  };
+
+  const addSecretsRow = (section: string) => {
+    setSecretsData(prev => ({ ...prev, [section]: [...(prev[section] || []), {}] }));
+  };
+
+  const removeSecretsRow = (section: string, index: number) => {
+    setSecretsData(prev => {
+      const newList = [...(prev[section] || [])];
+      newList.splice(index, 1);
+      return { ...prev, [section]: newList };
+    });
+  };
+
+  const renderSecretsTable = (sectionId: string, columns: { key: string, label: string, type?: string, options?: string[], width?: string, required?: boolean }[]) => {
+    const rows = secretsData[sectionId] || [];
+    return (
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm border-collapse">
+          <thead>
+            <tr className="bg-slate-50 border-b border-slate-200">
+              {columns.map(col => (
+                <th key={col.key} className="p-3 text-left font-bold text-slate-600 whitespace-nowrap">
+                  {col.label} {col.required && <span className="text-rose-500">*</span>}
+                </th>
+              ))}
+              <th className="p-3 w-10"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row, idx) => (
+              <tr key={idx} className="border-b border-slate-100 hover:bg-slate-50/50">
+                {columns.map(col => (
+                  <td key={col.key} className="p-2" style={{ width: col.width }}>
+                    {col.type === 'select' ? (
+                      <select 
+                        className={`w-full p-2 bg-white border rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 ${col.required && !row[col.key] ? 'border-rose-300' : 'border-slate-200'}`}
+                        value={row[col.key] || ''}
+                        onChange={e => updateSecretsRow(sectionId, idx, col.key, e.target.value)}
+                        disabled={readOnly}
+                      >
+                        <option value="">-</option>
+                        {col.options?.map(o => <option key={o} value={o}>{o}</option>)}
+                      </select>
+                    ) : col.type === 'checkbox' ? (
+                      <div className="flex justify-center">
+                        <input 
+                          type="checkbox" 
+                          className="w-5 h-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                          checked={!!row[col.key]}
+                          onChange={e => updateSecretsRow(sectionId, idx, col.key, e.target.checked)}
+                          disabled={readOnly}
+                        />
+                      </div>
+                    ) : (
+                      <input 
+                        type={col.type || 'text'}
+                        className={`w-full p-2 bg-white border rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 ${col.required && !row[col.key] ? 'border-rose-300' : 'border-slate-200'}`}
+                        value={row[col.key] || ''}
+                        onChange={e => updateSecretsRow(sectionId, idx, col.key, e.target.value)}
+                        placeholder={col.label}
+                        disabled={readOnly}
+                      />
+                    )}
+                  </td>
+                ))}
+                <td className="p-2 text-center">
+                  {!readOnly && (
+                  <button onClick={() => removeSecretsRow(sectionId, idx)} className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors">
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                  )}
+                </td>
+              </tr>
+            ))}
+            {rows.length === 0 && (
+              <tr>
+                <td colSpan={columns.length + 1} className="p-4 text-center text-slate-400 italic">Keine Einträge vorhanden.</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+        {!readOnly && (
+        <button onClick={() => addSecretsRow(sectionId)} className="mt-3 flex items-center gap-2 text-sm font-bold text-indigo-600 hover:text-indigo-700 px-3 py-2 hover:bg-indigo-50 rounded-lg transition-colors">
+          <Plus className="w-4 h-4" /> Zeile hinzufügen
+        </button>
+        )}
+      </div>
+    );
+  };
+
+  const exportJSON = () => {
+      let dataToExport;
+      let prefix;
+      if (activeTab === 'onboarding') {
+          dataToExport = onboardingData;
+          prefix = 'Onboarding';
+      } else if (activeTab === 'technical') {
+          dataToExport = technicalData;
+          prefix = 'Technical_Structure';
+      } else if (activeTab === 'secrets') {
+          dataToExport = secretsData;
+          prefix = 'Secrets_Management';
+      } else {
+          dataToExport = secretsOnboardingData;
+          prefix = 'Secrets_Onboarding';
+      }
+
+      const blob = new Blob([JSON.stringify(dataToExport, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${prefix}_${governanceRow.ICTO}.json`;
+      a.click();
+  };
+
+  // Derived options for Technical
+  const serverOptions = (technicalData.servers || []).map(s => s.serverName).filter(Boolean);
+  const accountOptions = (technicalData.sharedAccounts || []).map(a => a.techName).filter(Boolean);
+  const safeOptions = (technicalData.safes || []).map(s => s.techSafeName).filter(Boolean);
+
+  // Derived options for Secrets
+  const secretInventoryOptions = (secretsData.inventory || []).map(s => s.name).filter(Boolean);
+  const secretSafeOptions = (secretsData.safes || []).map(s => s.safeName).filter(Boolean);
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 print:p-0 animate-in zoom-in-95 duration-200">
+      <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm print:hidden" onClick={onClose}></div>
+      <div className="relative bg-white w-full max-w-[90rem] h-[95vh] rounded-xl shadow-2xl flex flex-col overflow-hidden print:h-auto print:w-full print:max-w-none print:rounded-none print:shadow-none print:absolute print:inset-0 print:z-[100]">
+        
+        {/* Header */}
+        <div className="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-white sticky top-0 z-10 print:hidden">
+            <div>
+                <h2 className="text-2xl font-black text-slate-900">
+                   {activeTab === 'onboarding' ? 'PAM Onboarding' : activeTab === 'technical' ? 'Technische Struktur Produktion' : activeTab === 'secrets' ? 'Secrets Management Inventar' : 'Onboarding Secrets Management'}
+                </h2>
+                <p className="text-slate-500 font-mono text-sm mt-1">{governanceRow.Name} ({governanceRow.ICTO})</p>
+            </div>
+            
+            {/* Tab Switcher */}
+            <div className="flex bg-slate-100 p-1 rounded-lg mx-4">
+                {mode === 'pam' && (
+                  <>
+                    <button 
+                      onClick={() => setActiveTab('onboarding')}
+                      className={`px-6 py-2.5 rounded-md text-sm font-bold transition-all flex items-center gap-2 ${activeTab === 'onboarding' ? 'bg-white text-rose-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                    >
+                      <Rocket className="w-4 h-4" /> Onboarding
+                    </button>
+                    <button 
+                      onClick={() => setActiveTab('technical')}
+                      className={`px-6 py-2.5 rounded-md text-sm font-bold transition-all flex items-center gap-2 ${activeTab === 'technical' ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                    >
+                      <Layers className="w-4 h-4" /> Technische Struktur
+                    </button>
+                  </>
+                )}
+                {mode === 'secrets' && (
+                  <>
+                    <button 
+                      onClick={() => setActiveTab('secrets-onboarding')}
+                      className={`px-6 py-2.5 rounded-md text-sm font-bold transition-all flex items-center gap-2 ${activeTab === 'secrets-onboarding' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                    >
+                      <ClipboardList className="w-4 h-4" /> Onboarding Secrets
+                    </button>
+                    <button 
+                      onClick={() => setActiveTab('secrets')}
+                      className={`px-6 py-2.5 rounded-md text-sm font-bold transition-all flex items-center gap-2 ${activeTab === 'secrets' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                    >
+                      <KeyRound className="w-4 h-4" /> Secrets Management Inventar
+                    </button>
+                  </>
+                )}
+            </div>
+
+            <div className="flex items-center gap-3">
+                <button 
+                    onClick={() => {
+                        if (activeTab === 'onboarding') {
+                            if (onboardingViewMode === 'form') loadOnboardingHistory();
+                            setOnboardingViewMode(v => v === 'form' ? 'history' : 'form');
+                        } else if (activeTab === 'technical') {
+                            if (technicalViewMode === 'form') loadTechnicalHistory();
+                            setTechnicalViewMode(v => v === 'form' ? 'history' : 'form');
+                        } else if (activeTab === 'secrets') {
+                            if (secretsViewMode === 'form') loadSecretsHistory();
+                            setSecretsViewMode(v => v === 'form' ? 'history' : 'form');
+                        } else {
+                            if (secretsOnboardingViewMode === 'form') loadSecretsOnboardingHistory();
+                            setSecretsOnboardingViewMode(v => v === 'form' ? 'history' : 'form');
+                        }
+                    }}
+                    className={`p-2 rounded-md transition-colors ${(activeTab === 'onboarding' ? onboardingViewMode : activeTab === 'technical' ? technicalViewMode : activeTab === 'secrets' ? secretsViewMode : secretsOnboardingViewMode) === 'history' ? 'bg-indigo-100 text-indigo-600' : 'hover:bg-slate-100 text-slate-500'}`}
+                    title="Änderungshistorie"
+                >
+                    <HistoryIcon className="w-5 h-5" />
+                </button>
+                <button onClick={exportJSON} className="p-2 hover:bg-slate-100 rounded-md text-slate-500" title="JSON Export"><Download className="w-5 h-5" /></button>
+                <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-md text-slate-500"><X className="w-6 h-6" /></button>
+            </div>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto p-8 bg-slate-50/50 custom-scrollbar print:overflow-visible print:bg-white">
+            {activeTab === 'onboarding' ? (
+                onboardingLoading ? <div className="flex justify-center p-10"><RefreshCw className="animate-spin w-8 h-8 text-indigo-500" /></div> : (
+                onboardingViewMode === 'history' ? (
+                    <div className="max-w-4xl mx-auto">
+                        <h3 className="text-xl font-bold mb-6 flex items-center gap-2 text-slate-800">
+                          <Clock className="w-6 h-6 text-indigo-500" /> Änderungsprotokoll
+                        </h3>
+                        <div className="space-y-4 relative before:absolute before:left-[19px] before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-100">
+                          {onboardingHistory.length === 0 && <p className="text-slate-400 pl-10">Keine Änderungen protokolliert.</p>}
+                          {onboardingHistory.map((entry: any) => (
+                            <div key={entry.id} className="relative pl-10">
+                              <div className="absolute left-0 top-1.5 w-[40px] h-[40px] bg-white border-4 border-slate-50 rounded-full flex items-center justify-center z-10">
+                                <div className="w-3 h-3 rounded-full bg-indigo-400"></div>
+                              </div>
+                              <div className="bg-white p-5 rounded-lg border border-slate-100 shadow-sm">
+                                <div className="flex justify-between items-start mb-2">
+                                  <div>
+                                    <span className="block font-bold text-slate-800">{entry.username}</span>
+                                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{entry.action}</span>
+                                  </div>
+                                  <span className="text-xs font-mono text-slate-400 bg-slate-50 px-2 py-1 rounded-md border border-slate-100">
+                                    {new Date(entry.timestamp).toLocaleString()}
+                                  </span>
+                                </div>
+                                {(() => {
+                                  try {
+                                    const details = JSON.parse(entry.details);
+                                    if (Array.isArray(details)) {
+                                      return (
+                                        <div className="mt-3 space-y-1 border-t border-slate-100 pt-3">
+                                          {details.map((change: any, i: number) => (
+                                            <div key={i} className="text-xs flex flex-wrap items-center gap-x-2 gap-y-1 text-slate-600">
+                                              <span className="font-bold bg-slate-50 px-1.5 py-0.5 rounded-sm border border-slate-200 text-slate-700">{change.field}</span>
+                                              <span className="line-through opacity-50 decoration-rose-400/50">{change.old || <span className="italic text-[10px]">leer</span>}</span>
+                                              <span className="text-slate-300">➜</span>
+                                              <span className="font-bold text-indigo-600">{change.new || <span className="italic text-[10px]">leer</span>}</span>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      );
+                                    }
+                                  } catch (e) {}
+                                  return null;
+                                })()}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                    </div>
+                ) : (
+                <div className="space-y-4 max-w-4xl mx-auto">
+                    
+                    {/* Section 2: Architecture */}
+                    <div className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm print:border-0 print:shadow-none">
+                        <button onClick={() => toggleOnboardingSection('architecture')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
+                            <div className="flex items-center gap-3 font-bold text-slate-700"><Database className="w-5 h-5 text-indigo-500" /> 1. Architektur</div>
+                            <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${onboardingOpenSections['architecture'] ? 'rotate-90' : ''}`} />
+                        </button>
+                        {(onboardingOpenSections['architecture'] || typeof window !== 'undefined' && window.matchMedia('print').matches) && (
+                            <div className="p-6 border-t border-slate-100 space-y-4">
+                                <div className="mb-4">
+                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Architektur des Zielsystems</label>
+                                    <textarea className="w-full p-3 bg-slate-50 border border-slate-200 rounded-md h-24 text-sm" value={onboardingData.archDesc || ''} onChange={e => updateField('archDesc', e.target.value)} disabled={readOnly}></textarea>
+                                </div>
+                                {renderInput("Betriebssysteme", "osList")}
+                                {renderInput("Datenbanken", "dbList")}
+                                {renderCheckbox("Ist geplant, die Server auszutauschen?", "serverReplace")}
+                                {onboardingData.serverReplace && renderInput("Geplantes Austauschdatum", "serverReplaceDate", "date")}
+                                {renderCheckbox("Load Balancer / Reverse Proxy vorhanden?", "hasLoadBalancer")}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Section 3: Technology */}
+                    <div className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm print:border-0 print:shadow-none">
+                        <button onClick={() => toggleOnboardingSection('technology')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
+                            <div className="flex items-center gap-3 font-bold text-slate-700"><Settings className="w-5 h-5 text-slate-500" /> 2. Anwendungstechnologie</div>
+                            <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${onboardingOpenSections['technology'] ? 'rotate-90' : ''}`} />
+                        </button>
+                        {(onboardingOpenSections['technology'] || typeof window !== 'undefined' && window.matchMedia('print').matches) && (
+                            <div className="p-6 border-t border-slate-100 grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {renderInput("Technologie", "techType", "text", undefined, ["Fat Client", "Webbasiert", "Java", "Mischform", "Cloud-Service"])}
+                                {renderCheckbox("Werden Zertifikate benötigt?", "needsCerts")}
+                                {renderCheckbox("Aktives 4-Augen-Prinzip?", "fourEyes")}
+                                {renderInput("Lizenzart", "licenseType", "text", undefined, ["Accountgebunden", "Identitätsgebunden", "Serverbasiert"])}
+                                {renderInput("URL Produktion", "urlProd")}
+                                {renderInput("URL Test", "urlTest")}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Section 4: Login */}
+                    <div className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm print:border-0 print:shadow-none">
+                        <button onClick={() => toggleOnboardingSection('login')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
+                            <div className="flex items-center gap-3 font-bold text-slate-700"><LogIn className="w-5 h-5 text-emerald-500" /> 3. Anmeldeverfahren</div>
+                            <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${onboardingOpenSections['login'] ? 'rotate-90' : ''}`} />
+                        </button>
+                        {(onboardingOpenSections['login'] || typeof window !== 'undefined' && window.matchMedia('print').matches) && (
+                            <div className="p-6 border-t border-slate-100 space-y-4">
+                                {renderInput("Anmeldeverfahren", "loginMethod", "text", undefined, ["Single Sign-On", "Anmeldemaske", "Multifaktor-Authentifizierung", "anderes"])}
+                                {renderInput("Account-Typ", "accountType", "text", "Wichtig für Passwort-Prozess", ["Lokale Accounts", "Domain Accounts"])}
+                                {renderCheckbox("Kann User mehrere Sessions öffnen?", "multiSession")}
+                                {renderInput("Username Nomenklatur", "usernameNaming")}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Section 5: Password (Conditional) */}
+                    {onboardingData.accountType !== 'Domain Accounts' && (
+                    <div className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm print:border-0 print:shadow-none">
+                        <button onClick={() => toggleOnboardingSection('password')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
+                            <div className="flex items-center gap-3 font-bold text-slate-700"><ShieldCheck className="w-5 h-5 text-rose-500" /> 4. Passwortwechsel</div>
+                            <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${onboardingOpenSections['password'] ? 'rotate-90' : ''}`} />
+                        </button>
+                        {(onboardingOpenSections['password'] || typeof window !== 'undefined' && window.matchMedia('print').matches) && (
+                            <div className="p-6 border-t border-slate-100 space-y-4">
+                                <div className="mb-4">
+                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Wie werden Passwörter geändert?</label>
+                                    <textarea className="w-full p-3 bg-slate-50 border border-slate-200 rounded-md h-20 text-sm" value={onboardingData.pwChangeDesc || ''} onChange={e => updateField('pwChangeDesc', e.target.value)} disabled={readOnly}></textarea>
+                                </div>
+                                {renderCheckbox("Kann Rotation automatisiert werden?", "autoRotation")}
+                                {renderInput("Wer ändert Passwörter?", "whoChangesPw")}
+                                {renderInput("Wechselintervall", "pwInterval")}
+                            </div>
+                        )}
+                    </div>
+                    )}
+
+                    {/* Section 6: Test */}
+                    <div className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm print:border-0 print:shadow-none">
+                        <button onClick={() => toggleOnboardingSection('test')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
+                            <div className="flex items-center gap-3 font-bold text-slate-700"><FileCheck className="w-5 h-5 text-amber-500" /> 5. Testuser & Umgebung</div>
+                            <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${onboardingOpenSections['test'] ? 'rotate-90' : ''}`} />
+                        </button>
+                        {(onboardingOpenSections['test'] || typeof window !== 'undefined' && window.matchMedia('print').matches) && (
+                            <div className="p-6 border-t border-slate-100 space-y-4">
+                                {renderCheckbox("Testuser vorhanden?", "hasTestUsers")}
+                                {onboardingData.hasTestUsers && renderInput("Testuser Accounts", "testUsersList")}
+                                {renderCheckbox("Rechte über Omada?", "omadaRights")}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Section 7: Emergency */}
+                    <div className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm print:border-0 print:shadow-none">
+                        <button onClick={() => toggleOnboardingSection('emergency')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
+                            <div className="flex items-center gap-3 font-bold text-slate-700"><AlertTriangle className="w-5 h-5 text-rose-500" /> 6. Notfallprozess</div>
+                            <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${onboardingOpenSections['emergency'] ? 'rotate-90' : ''}`} />
+                        </button>
+                        {(onboardingOpenSections['emergency'] || typeof window !== 'undefined' && window.matchMedia('print').matches) && (
+                            <div className="p-6 border-t border-slate-100 space-y-4">
+                                {renderCheckbox("Existieren Notfallaccounts?", "hasEmergencyAccounts")}
+                                {onboardingData.hasEmergencyAccounts && renderInput("Notfall Accounts", "emergencyAccountsList")}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Section 8: Matrix */}
+                    <div className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm print:border-0 print:shadow-none">
+                        <button onClick={() => toggleOnboardingSection('matrix')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
+                            <div className="flex items-center gap-3 font-bold text-slate-700"><Link2 className="w-5 h-5 text-indigo-600" /> 7. Vereinbarte Anbindungsvariante</div>
+                            <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${onboardingOpenSections['matrix'] ? 'rotate-90' : ''}`} />
+                        </button>
+                        {(onboardingOpenSections['matrix'] || typeof window !== 'undefined' && window.matchMedia('print').matches) && (
+                            <div className="p-6 border-t border-slate-100">
+                                <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {renderInput("Anmeldung", "matrixLogin", "text", undefined, ["Automatisch", "Manuell"])}
+                                    {renderInput("Passwortwechsel", "matrixPwChange", "text", undefined, ["Automatisch", "Manuell"])}
+                                </div>
+                                {renderMatrix()}
+                            </div>
+                        )}
+                    </div>
+
+                </div>
+                )
+            )) : activeTab === 'technical' ? (
+                technicalLoading ? <div className="flex justify-center p-10"><RefreshCw className="animate-spin w-8 h-8 text-emerald-500" /></div> : (
+                technicalViewMode === 'history' ? (
+                    <div className="max-w-[85rem] mx-auto">
+                        <h3 className="text-xl font-bold mb-6 flex items-center gap-2 text-slate-800">
+                          <Clock className="w-6 h-6 text-indigo-500" /> Änderungsprotokoll
+                        </h3>
+                        <div className="space-y-4 relative before:absolute before:left-[19px] before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-100">
+                          {technicalHistory.length === 0 && <p className="text-slate-400 pl-10">Keine Änderungen protokolliert.</p>}
+                          {technicalHistory.map((entry: any) => (
+                            <div key={entry.id} className="relative pl-10">
+                              <div className="absolute left-0 top-1.5 w-[40px] h-[40px] bg-white border-4 border-slate-50 rounded-full flex items-center justify-center z-10">
+                                <div className="w-3 h-3 rounded-full bg-indigo-400"></div>
+                              </div>
+                              <div className="bg-white p-5 rounded-lg border border-slate-100 shadow-sm">
+                                <div className="flex justify-between items-start mb-2">
+                                  <div>
+                                    <span className="block font-bold text-slate-800">{entry.username}</span>
+                                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{entry.action}</span>
+                                  </div>
+                                  <span className="text-xs font-mono text-slate-400 bg-slate-50 px-2 py-1 rounded-md border border-slate-100">
+                                    {new Date(entry.timestamp).toLocaleString()}
+                                  </span>
+                                </div>
+                                {(() => {
+                                  try {
+                                    const details = JSON.parse(entry.details);
+                                    if (Array.isArray(details)) {
+                                      return (
+                                        <div className="mt-3 space-y-1 border-t border-slate-100 pt-3">
+                                          {details.map((change: any, i: number) => (
+                                            <div key={i} className="text-xs flex flex-wrap items-center gap-x-2 gap-y-1 text-slate-600">
+                                              <span className="font-bold bg-slate-50 px-1.5 py-0.5 rounded-sm border border-slate-200 text-slate-700">{change.field}</span>
+                                              <span className="line-through opacity-50 decoration-rose-400/50">{change.old || <span className="italic text-[10px]">leer</span>}</span>
+                                              <span className="text-slate-300">➜</span>
+                                              <span className="font-bold text-indigo-600">{change.new || <span className="italic text-[10px]">leer</span>}</span>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      );
+                                    }
+                                  } catch (e) {}
+                                  return null;
+                                })()}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                    </div>
+                ) : (
+                <div className="space-y-6 max-w-[85rem] mx-auto">
+                    
+                    {/* 1. Servers */}
+                    <div className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm print:border-0 print:shadow-none">
+                        <button onClick={() => toggleTechnicalSection('servers')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
+                            <div className="flex items-center gap-3 font-bold text-slate-700"><Server className="w-5 h-5 text-blue-500" /> 1. Server / Betriebssysteme</div>
+                            <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${technicalOpenSections['servers'] ? 'rotate-90' : ''}`} />
+                        </button>
+                        {(technicalOpenSections['servers'] || typeof window !== 'undefined' && window.matchMedia('print').matches) && (
+                            <div className="p-6 border-t border-slate-100">
+                                {renderTable('servers', [
+                                  { key: 'serverName', label: 'Servername', required: true },
+                                  { key: 'ip', label: 'IP-Adresse' },
+                                  { key: 'fqdn', label: 'Adresse / FQDN' },
+                                  { key: 'stage', label: 'Stage', type: 'select', options: ['Prod', 'Test', 'Dev'], required: true },
+                                  { key: 'dmz', label: 'DMZ', type: 'checkbox', width: '60px' },
+                                  { key: 'desc', label: 'Beschreibung / Nutzung' },
+                                  { key: 'os', label: 'Betriebssystem' },
+                                  { key: 'port', label: 'Zugriff Port/Protokoll' },
+                                  { key: 'expiry', label: 'Ablaufdatum', type: 'date' }
+                                ])}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* 2. Databases */}
+                    <div className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm print:border-0 print:shadow-none">
+                        <button onClick={() => toggleTechnicalSection('databases')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
+                            <div className="flex items-center gap-3 font-bold text-slate-700"><Database className="w-5 h-5 text-indigo-500" /> 2. Datenbanken / Server</div>
+                            <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${technicalOpenSections['databases'] ? 'rotate-90' : ''}`} />
+                        </button>
+                        {(technicalOpenSections['databases'] || typeof window !== 'undefined' && window.matchMedia('print').matches) && (
+                            <div className="p-6 border-t border-slate-100">
+                                {renderTable('databases', [
+                                  { key: 'serverName', label: 'Servername', required: true },
+                                  { key: 'ip', label: 'IP-Adresse' },
+                                  { key: 'fqdn', label: 'Adresse / FQDN' },
+                                  { key: 'stage', label: 'Stage', type: 'select', options: ['Prod', 'Test', 'Dev'], required: true },
+                                  { key: 'dbType', label: 'Datenbanktyp' },
+                                  { key: 'instance', label: 'Instanz / DB-Name' },
+                                  { key: 'product', label: 'Produktname & Version' },
+                                  { key: 'port', label: 'Zugriff Port/Protokoll' }
+                                ])}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* 3. Ports */}
+                    <div className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm print:border-0 print:shadow-none">
+                        <button onClick={() => toggleTechnicalSection('ports')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
+                            <div className="flex items-center gap-3 font-bold text-slate-700"><Network className="w-5 h-5 text-emerald-500" /> 3. Portfreischaltungen</div>
+                            <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${technicalOpenSections['ports'] ? 'rotate-90' : ''}`} />
+                        </button>
+                        {(technicalOpenSections['ports'] || typeof window !== 'undefined' && window.matchMedia('print').matches) && (
+                            <div className="p-6 border-t border-slate-100">
+                                {renderTable('ports', [
+                                  { key: 'fromServer', label: 'Von Server', type: 'select', options: serverOptions },
+                                  { key: 'fromIp', label: 'Von IP' },
+                                  { key: 'fromStage', label: 'Von Stage', type: 'select', options: ['Prod', 'Test', 'Dev'] },
+                                  { key: 'toServer', label: 'Nach Server', type: 'select', options: serverOptions },
+                                  { key: 'toIp', label: 'Nach IP' },
+                                  { key: 'toStage', label: 'Nach Stage', type: 'select', options: ['Prod', 'Test', 'Dev'] },
+                                  { key: 'port', label: 'Port/Protokoll', required: true },
+                                  { key: 'provider', label: 'Dienstleister' },
+                                  { key: 'interfaceId', label: 'Schnittstellen-ID' },
+                                  { key: 'comment', label: 'Kommentar' }
+                                ])}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* 4. Safes */}
+                    <div className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm print:border-0 print:shadow-none">
+                        <button onClick={() => toggleTechnicalSection('safes')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
+                            <div className="flex items-center gap-3 font-bold text-slate-700"><Lock className="w-5 h-5 text-amber-500" /> 4. Safe-Struktur (CyberArk)</div>
+                            <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${technicalOpenSections['safes'] ? 'rotate-90' : ''}`} />
+                        </button>
+                        {(technicalOpenSections['safes'] || typeof window !== 'undefined' && window.matchMedia('print').matches) && (
+                            <div className="p-6 border-t border-slate-100">
+                                {renderTable('safes', [
+                                  { key: 'userGroup', label: 'Nutzergruppe' },
+                                  { key: 'safeName', label: 'Safe Name (fachlich)', required: true },
+                                  { key: 'safeDesc', label: 'Safe Beschreibung' },
+                                  { key: 'techSafeName', label: 'Technischer Safe Name', required: true },
+                                  { key: 'adGroup', label: 'AD-Gruppe', required: true },
+                                  { key: 'adGroupDesc', label: 'Beschreibung AD-Gruppe' },
+                                  { key: 'approver', label: 'Zweitgenehmiger (Omada)' },
+                                  { key: 'sod', label: 'SoD-Hinweis' }
+                                ])}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* 5. Safe Members */}
+                    <div className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm print:border-0 print:shadow-none">
+                        <button onClick={() => toggleTechnicalSection('safeMembers')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
+                            <div className="flex items-center gap-3 font-bold text-slate-700"><Users className="w-5 h-5 text-purple-500" /> 5. Mitglieder der Safes</div>
+                            <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${technicalOpenSections['safeMembers'] ? 'rotate-90' : ''}`} />
+                        </button>
+                        {(technicalOpenSections['safeMembers'] || typeof window !== 'undefined' && window.matchMedia('print').matches) && (
+                            <div className="p-6 border-t border-slate-100">
+                                <div className="mb-4 p-4 bg-blue-50 text-blue-800 rounded-lg text-sm flex items-start gap-3">
+                                  <Info className="w-5 h-5 shrink-0 mt-0.5" />
+                                  <div>
+                                    <strong>Hinweis:</strong> Änderungen an der Mitgliederstruktur erfolgen regelmäßig. Die führende Quelle für aktuelle Safe-Mitglieder ist Omada. Diese Tabelle dient der Dokumentation des Soll-Zustands.
+                                  </div>
+                                </div>
+                                {renderTable('safeMembers', [
+                                  { key: 'safeName', label: 'Safe Name', type: 'select', options: safeOptions },
+                                  { key: 'adGroup', label: 'AD-Gruppe des Safes' },
+                                  { key: 'memberName', label: 'Name Mitglied' },
+                                  { key: 'identity', label: 'Primäre Identität' }
+                                ])}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* 6. Shared Accounts */}
+                    <div className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm print:border-0 print:shadow-none">
+                        <button onClick={() => toggleTechnicalSection('sharedAccounts')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
+                            <div className="flex items-center gap-3 font-bold text-slate-700"><Key className="w-5 h-5 text-rose-500" /> 6. Shared Accounts</div>
+                            <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${technicalOpenSections['sharedAccounts'] ? 'rotate-90' : ''}`} />
+                        </button>
+                        {(technicalOpenSections['sharedAccounts'] || typeof window !== 'undefined' && window.matchMedia('print').matches) && (
+                            <div className="p-6 border-t border-slate-100">
+                                {renderTable('sharedAccounts', [
+                                  { key: 'bizName', label: 'Fachlicher Name' },
+                                  { key: 'techName', label: 'Technischer Name', required: true },
+                                  { key: 'sam', label: 'sAMAccountName' },
+                                  { key: 'login', label: 'Anmeldename (Ziel)' },
+                                  { key: 'desc', label: 'Beschreibung' },
+                                  { key: 'isAd', label: 'AD Account', type: 'checkbox', width: '80px' },
+                                  { key: 'owner', label: 'Accountbesitzer' },
+                                  { key: 'ownerId', label: 'Identität Besitzer' }
+                                ])}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* 7. Permissions */}
+                    <div className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm print:border-0 print:shadow-none">
+                        <button onClick={() => toggleTechnicalSection('permissions')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
+                            <div className="flex items-center gap-3 font-bold text-slate-700"><Shield className="w-5 h-5 text-cyan-500" /> 7. Berechtigungszuordnungen</div>
+                            <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${technicalOpenSections['permissions'] ? 'rotate-90' : ''}`} />
+                        </button>
+                        {(technicalOpenSections['permissions'] || typeof window !== 'undefined' && window.matchMedia('print').matches) && (
+                            <div className="p-6 border-t border-slate-100">
+                                {renderTable('permissions', [
+                                  { key: 'bizName', label: 'Fachlicher Account', type: 'select', options: accountOptions },
+                                  { key: 'techName', label: 'Technischer Account', type: 'select', options: accountOptions },
+                                  { key: 'roleId', label: 'Role ID', required: true },
+                                  { key: 'roleName', label: 'Role Displayname' },
+                                  { key: 'roleDesc', label: 'Role Description' },
+                                  { key: 'bizSystem', label: 'Fachliches System' },
+                                  { key: 'bizSystemId', label: 'Fachliche System-ID' }
+                                ])}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* 8. Mapping */}
+                    <div className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm print:border-0 print:shadow-none">
+                        <button onClick={() => toggleTechnicalSection('mapping')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
+                            <div className="flex items-center gap-3 font-bold text-slate-700"><Link className="w-5 h-5 text-indigo-600" /> 8. Shared Accounts zu Safe</div>
+                            <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${technicalOpenSections['mapping'] ? 'rotate-90' : ''}`} />
+                        </button>
+                        {(technicalOpenSections['mapping'] || typeof window !== 'undefined' && window.matchMedia('print').matches) && (
+                            <div className="p-6 border-t border-slate-100">
+                                {renderTable('mapping', [
+                                  { key: 'bizAccount', label: 'Fachlicher Account', type: 'select', options: accountOptions, required: true },
+                                  { key: 'techAccount', label: 'Technischer Account', type: 'select', options: accountOptions, required: true },
+                                  { key: 'safeName', label: 'Safe Name', type: 'select', options: safeOptions, required: true },
+                                  { key: 'techSafe', label: 'Technischer Safe', type: 'select', options: safeOptions, required: true }
+                                ])}
+                            </div>
+                        )}
+                    </div>
+
+                </div>
+                )
+            )) : activeTab === 'secrets' ? (
+                secretsLoading ? <div className="flex justify-center p-10"><RefreshCw className="animate-spin w-8 h-8 text-indigo-500" /></div> : (
+                secretsViewMode === 'history' ? (
+                    <div className="max-w-[85rem] mx-auto">
+                        <h3 className="text-xl font-bold mb-6 flex items-center gap-2 text-slate-800">
+                          <Clock className="w-6 h-6 text-indigo-500" /> Änderungsprotokoll
+                        </h3>
+                        <div className="space-y-4 relative before:absolute before:left-[19px] before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-100">
+                          {secretsHistory.length === 0 && <p className="text-slate-400 pl-10">Keine Änderungen protokolliert.</p>}
+                          {secretsHistory.map((entry: any) => (
+                            <div key={entry.id} className="relative pl-10">
+                              <div className="absolute left-0 top-1.5 w-[40px] h-[40px] bg-white border-4 border-slate-50 rounded-full flex items-center justify-center z-10">
+                                <div className="w-3 h-3 rounded-full bg-indigo-400"></div>
+                              </div>
+                              <div className="bg-white p-5 rounded-lg border border-slate-100 shadow-sm">
+                                <div className="flex justify-between items-start mb-2">
+                                  <div>
+                                    <span className="block font-bold text-slate-800">{entry.username}</span>
+                                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{entry.action}</span>
+                                  </div>
+                                  <span className="text-xs font-mono text-slate-400 bg-slate-50 px-2 py-1 rounded-md border border-slate-100">
+                                    {new Date(entry.timestamp).toLocaleString()}
+                                  </span>
+                                </div>
+                                {(() => {
+                                  try {
+                                    const details = JSON.parse(entry.details);
+                                    if (Array.isArray(details)) {
+                                      return (
+                                        <div className="mt-3 space-y-1 border-t border-slate-100 pt-3">
+                                          {details.map((change: any, i: number) => (
+                                            <div key={i} className="text-xs flex flex-wrap items-center gap-x-2 gap-y-1 text-slate-600">
+                                              <span className="font-bold bg-slate-50 px-1.5 py-0.5 rounded-sm border border-slate-200 text-slate-700">{change.field}</span>
+                                              <span className="line-through opacity-50 decoration-rose-400/50">{change.old || <span className="italic text-[10px]">leer</span>}</span>
+                                              <span className="text-slate-300">➜</span>
+                                              <span className="font-bold text-indigo-600">{change.new || <span className="italic text-[10px]">leer</span>}</span>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      );
+                                    }
+                                  } catch (e) {}
+                                  return null;
+                                })()}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                    </div>
+                ) : (
+                <div className="space-y-6 max-w-[85rem] mx-auto">
+                    
+                    {/* 1. Secret Inventory */}
+                    <div className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm print:border-0 print:shadow-none">
+                        <button onClick={() => toggleSecretsSection('inventory')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
+                            <div className="flex items-center gap-3 font-bold text-slate-700"><KeyRound className="w-5 h-5 text-indigo-500" /> 1. Secret Inventory</div>
+                            <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${secretsOpenSections['inventory'] ? 'rotate-90' : ''}`} />
+                        </button>
+                        {(secretsOpenSections['inventory'] || typeof window !== 'undefined' && window.matchMedia('print').matches) && (
+                            <div className="p-6 border-t border-slate-100">
+                                {renderSecretsTable('inventory', [
+                                  { key: 'category', label: 'Kategorie', type: 'select', options: ['Passwort', 'SSH-Key', 'API-Key', 'Zertifikat'], required: true, width: '180px' },
+                                  { key: 'name', label: 'Name / ID', required: true, width: '200px' },
+                                  { key: 'owner', label: 'Secret Owner', width: '150px' },
+                                  { key: 'holder', label: 'Secret Holder', width: '150px' },
+                                  { key: 'layer', label: 'Layer', type: 'select', options: ['Anwendung', 'Betriebssystem', 'Datenbank'], width: '200px' },
+                                  { key: 'localOrAd', label: 'Lokal oder AD', type: 'select', options: ['Lokal', 'AD'], width: '150px' },
+                                  { key: 'stage', label: 'Stage', type: 'select', options: ['Prod', 'Test', 'Dev', 'Int'], required: true, width: '150px' },
+                                  { key: 'complexity', label: 'Komplexitätsregeln', width: '200px' },
+                                  { key: 'autoRotation', label: 'Auto Rotation', type: 'select', options: ['Ja', 'Nein'], width: '120px' },
+                                  { key: 'rotationMech', label: 'Rotationsmechanismus', width: '200px' },
+                                  { key: 'frequency', label: 'Häufigkeit', type: 'select', options: ['Täglich', 'Wöchentlich', 'Monatlich', 'Jährlich', 'bei Bedarf'], width: '150px' },
+                                  { key: 'timeWindow', label: 'Zeitfenster', width: '150px' }
+                                ])}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* 2. Safe Structure */}
+                    <div className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm print:border-0 print:shadow-none">
+                        <button onClick={() => toggleSecretsSection('safes')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
+                            <div className="flex items-center gap-3 font-bold text-slate-700"><Lock className="w-5 h-5 text-amber-500" /> 2. Safe- / Pfad-Struktur</div>
+                            <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${secretsOpenSections['safes'] ? 'rotate-90' : ''}`} />
+                        </button>
+                        {(secretsOpenSections['safes'] || typeof window !== 'undefined' && window.matchMedia('print').matches) && (
+                            <div className="p-6 border-t border-slate-100">
+                                <div className="mb-4 p-4 bg-blue-50 text-blue-800 rounded-lg text-sm flex items-start gap-3">
+                                  <Info className="w-5 h-5 shrink-0 mt-0.5" />
+                                  <div>
+                                    <strong>Info:</strong> Die Safe- und Pfad-Struktur stellt eine logische Bündelung von Secrets und Shared Accounts dar. Safes werden in CyberArk verwendet, um Berechtigungen strukturiert zu vergeben.
+                                  </div>
+                                </div>
+                                {renderSecretsTable('safes', [
+                                  { key: 'userGroup', label: 'Nutzergruppe' },
+                                  { key: 'safeName', label: 'Safe Name / Pfad (fachlich)', required: true },
+                                  { key: 'safeDesc', label: 'Safe / Pfad Beschreibung' },
+                                  { key: 'techSafeName', label: 'Technischer Safe Name / Pfad-Prefix', required: true },
+                                  { key: 'adGroup', label: 'AD-Gruppe', required: true },
+                                  { key: 'adGroupDesc', label: 'Fachliche Beschreibung AD-Gruppe' },
+                                  { key: 'approver', label: 'Zweitgenehmiger in Omada' },
+                                  { key: 'sod', label: 'SoD-Hinweis' }
+                                ])}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* 3. Members */}
+                    <div className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm print:border-0 print:shadow-none">
+                        <button onClick={() => toggleSecretsSection('members')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
+                            <div className="flex items-center gap-3 font-bold text-slate-700"><Users className="w-5 h-5 text-purple-500" /> 3. Mitglieder der Safes</div>
+                            <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${secretsOpenSections['members'] ? 'rotate-90' : ''}`} />
+                        </button>
+                        {(secretsOpenSections['members'] || typeof window !== 'undefined' && window.matchMedia('print').matches) && (
+                            <div className="p-6 border-t border-slate-100">
+                                <div className="mb-4 p-4 bg-blue-50 text-blue-800 rounded-lg text-sm flex items-start gap-3">
+                                  <Info className="w-5 h-5 shrink-0 mt-0.5" />
+                                  <div>
+                                    <strong>Hinweis:</strong> Änderungen in der Mitgliederstruktur der Safes erfolgen aufgrund laufender Pflege und Aktualisierung nicht im Rahmen dieses Dokuments. Die führende Quelle für aktuelle Safe-Mitglieder ist Omada.
+                                  </div>
+                                </div>
+                                {renderSecretsTable('members', [
+                                  { key: 'safeName', label: 'Safe Name', type: 'select', options: secretSafeOptions },
+                                  { key: 'adGroup', label: 'AD-Gruppe des Safes' },
+                                  { key: 'memberName', label: 'Name Mitglied' },
+                                  { key: 'identity', label: 'Primäre Identität' }
+                                ])}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* 4. Mapping */}
+                    <div className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm print:border-0 print:shadow-none">
+                        <button onClick={() => toggleSecretsSection('mapping')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
+                            <div className="flex items-center gap-3 font-bold text-slate-700"><Link className="w-5 h-5 text-emerald-500" /> 4. Secrets zu Safe</div>
+                            <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${secretsOpenSections['mapping'] ? 'rotate-90' : ''}`} />
+                        </button>
+                        {(secretsOpenSections['mapping'] || typeof window !== 'undefined' && window.matchMedia('print').matches) && (
+                            <div className="p-6 border-t border-slate-100">
+                                {renderSecretsTable('mapping', [
+                                  { key: 'bizSecret', label: 'Fachlicher Secret Name', type: 'select', options: secretInventoryOptions, required: true },
+                                  { key: 'techSecret', label: 'Technischer Secret Name' },
+                                  { key: 'safeName', label: 'Safe Name', type: 'select', options: secretSafeOptions, required: true },
+                                  { key: 'techSafe', label: 'Technischer Safe' }
+                                ])}
+                            </div>
+                        )}
+                    </div>
+
+                </div>
+                )
+            )) : (
+                secretsOnboardingLoading ? <div className="flex justify-center p-10"><RefreshCw className="animate-spin w-8 h-8 text-indigo-500" /></div> : (
+                secretsOnboardingViewMode === 'history' ? (
+                    <div className="max-w-[85rem] mx-auto">
+                        <h3 className="text-xl font-bold mb-6 flex items-center gap-2 text-slate-800">
+                          <Clock className="w-6 h-6 text-indigo-500" /> Änderungsprotokoll
+                        </h3>
+                        <div className="space-y-4 relative before:absolute before:left-[19px] before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-100">
+                          {secretsOnboardingHistory.length === 0 && <p className="text-slate-400 pl-10">Keine Änderungen protokolliert.</p>}
+                          {secretsOnboardingHistory.map((entry: any) => (
+                            <div key={entry.id} className="relative pl-10">
+                              <div className="absolute left-0 top-1.5 w-[40px] h-[40px] bg-white border-4 border-slate-50 rounded-full flex items-center justify-center z-10">
+                                <div className="w-3 h-3 rounded-full bg-indigo-400"></div>
+                              </div>
+                              <div className="bg-white p-5 rounded-lg border border-slate-100 shadow-sm">
+                                <div className="flex justify-between items-start mb-2">
+                                  <div>
+                                    <span className="block font-bold text-slate-800">{entry.username}</span>
+                                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{entry.action}</span>
+                                  </div>
+                                  <span className="text-xs font-mono text-slate-400 bg-slate-50 px-2 py-1 rounded-md border border-slate-100">
+                                    {new Date(entry.timestamp).toLocaleString()}
+                                  </span>
+                                </div>
+                                {(() => {
+                                  try {
+                                    const details = JSON.parse(entry.details);
+                                    if (Array.isArray(details)) {
+                                      return (
+                                        <div className="mt-3 space-y-1 border-t border-slate-100 pt-3">
+                                          {details.map((change: any, i: number) => (
+                                            <div key={i} className="text-xs flex flex-wrap items-center gap-x-2 gap-y-1 text-slate-600">
+                                              <span className="font-bold bg-slate-50 px-1.5 py-0.5 rounded-sm border border-slate-200 text-slate-700">{change.field}</span>
+                                              <span className="line-through opacity-50 decoration-rose-400/50">{change.old || <span className="italic text-[10px]">leer</span>}</span>
+                                              <span className="text-slate-300">➜</span>
+                                              <span className="font-bold text-indigo-600">{change.new || <span className="italic text-[10px]">leer</span>}</span>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      );
+                                    }
+                                  } catch (e) {}
+                                  return null;
+                                })()}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                    </div>
+                ) : (
+                <div className="space-y-6 max-w-4xl mx-auto">
+                    {/* 1. Infrastruktur */}
+                    <div className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm print:border-0 print:shadow-none">
+                        <button onClick={() => toggleSecretsOnboardingSection('infrastructure')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
+                            <div className="flex items-center gap-3 font-bold text-slate-700"><Server className="w-5 h-5 text-indigo-500" /> 1. Infrastruktur</div>
+                            <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${secretsOnboardingOpenSections['infrastructure'] ? 'rotate-90' : ''}`} />
+                        </button>
+                        {(secretsOnboardingOpenSections['infrastructure'] || typeof window !== 'undefined' && window.matchMedia('print').matches) && (
+                            <div className="p-6 border-t border-slate-100 space-y-4">
+                                {renderSecretsOnboardingInput("Von wo aus wird auf die Secrets zugegriffen?", "accessSource")}
+                                {renderSecretsOnboardingInput("Zielarchitektur / Migrationshinweis", "targetArchitecture")}
+                                {renderSecretsOnboardingInput("Betriebsmodell", "operatingModel", "text", undefined, ["On-Prem", "Cloud", "Hybrid"])}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* 2. Tool-Nutzung */}
+                    <div className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm print:border-0 print:shadow-none">
+                        <button onClick={() => toggleSecretsOnboardingSection('tools')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
+                            <div className="flex items-center gap-3 font-bold text-slate-700"><Settings className="w-5 h-5 text-indigo-500" /> 2. Tool-Nutzung</div>
+                            <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${secretsOnboardingOpenSections['tools'] ? 'rotate-90' : ''}`} />
+                        </button>
+                        {(secretsOnboardingOpenSections['tools'] || typeof window !== 'undefined' && window.matchMedia('print').matches) && (
+                            <div className="p-6 border-t border-slate-100 space-y-4">
+                                {renderSecretsOnboardingInput("Läuft die Anwendung auf:", "appType", "text", undefined, ["Statischer Server", "Container"])}
+                                {renderSecretsOnboardingInput("Betriebssystem", "os")}
+                                {renderSecretsOnboardingInput("Wie wird die Anwendung bereitgestellt?", "deployment")}
+                                {renderSecretsOnboardingInput("Wie werden Anmeldeinformationen initial bereitgestellt?", "initialAuth")}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* 3. Container - Standalone */}
+                    {secretsOnboardingData.appType === 'Container' && (
+                    <div className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm print:border-0 print:shadow-none">
+                        <button onClick={() => toggleSecretsOnboardingSection('container_standalone')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
+                            <div className="flex items-center gap-3 font-bold text-slate-700"><Database className="w-5 h-5 text-indigo-500" /> 3. Container – Standalone</div>
+                            <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${secretsOnboardingOpenSections['container_standalone'] ? 'rotate-90' : ''}`} />
+                        </button>
+                        {(secretsOnboardingOpenSections['container_standalone'] || typeof window !== 'undefined' && window.matchMedia('print').matches) && (
+                            <div className="p-6 border-t border-slate-100 space-y-4">
+                                {renderSecretsOnboardingInput("Wurde der Container / die Anwendung selbst erstellt?", "containerSelfBuilt", "text", undefined, ["Ja", "Nein", "N/A"])}
+                            </div>
+                        )}
+                    </div>
+                    )}
+
+                    {/* 4. Container - K8s */}
+                    {secretsOnboardingData.appType === 'Container' && (
+                    <div className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm print:border-0 print:shadow-none">
+                        <button onClick={() => toggleSecretsOnboardingSection('container_k8s')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
+                            <div className="flex items-center gap-3 font-bold text-slate-700"><Cloud className="w-5 h-5 text-indigo-500" /> 4. Container – Kubernetes / OpenShift</div>
+                            <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${secretsOnboardingOpenSections['container_k8s'] ? 'rotate-90' : ''}`} />
+                        </button>
+                        {(secretsOnboardingOpenSections['container_k8s'] || typeof window !== 'undefined' && window.matchMedia('print').matches) && (
+                            <div className="p-6 border-t border-slate-100 space-y-4">
+                                {renderSecretsOnboardingInput("Verwendet die Anwendung Kubernetes Secrets?", "k8sSecrets", "text", undefined, ["Ja", "Nein", "N/A"])}
+                                {renderSecretsOnboardingInput("Besteht Kontrolle über den Anwendungscode?", "codeControl", "text", undefined, ["Ja", "Nein", "N/A"])}
+                                <div className="p-3 bg-amber-50 text-amber-800 text-sm rounded-lg border border-amber-100 flex gap-2">
+                                    <AlertTriangle className="w-5 h-5 shrink-0" />
+                                    <span><strong>Hinweis:</strong> Kubernetes Secrets sind standardmäßig nur base64-kodiert und nicht verschlüsselt. Dies stellt ein Sicherheitsrisiko dar.</span>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                    )}
+
+                    {/* 5. Cloud Computing */}
+                    {(secretsOnboardingData.operatingModel === 'Cloud' || secretsOnboardingData.operatingModel === 'Hybrid') && (
+                    <div className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm print:border-0 print:shadow-none">
+                        <button onClick={() => toggleSecretsOnboardingSection('cloud')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
+                            <div className="flex items-center gap-3 font-bold text-slate-700"><Cloud className="w-5 h-5 text-indigo-500" /> 5. Cloud Computing</div>
+                            <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${secretsOnboardingOpenSections['cloud'] ? 'rotate-90' : ''}`} />
+                        </button>
+                        {(secretsOnboardingOpenSections['cloud'] || typeof window !== 'undefined' && window.matchMedia('print').matches) && (
+                            <div className="p-6 border-t border-slate-100 space-y-4">
+                                {renderSecretsOnboardingInput("Nutzung von Serverless Functions?", "serverless", "text", undefined, ["Ja", "Nein", "N/A"])}
+                                {renderSecretsOnboardingInput("Nutzung von VMs in der Cloud (Hyperscaler)?", "cloudVMs", "text", undefined, ["Ja", "Nein", "N/A"])}
+                            </div>
+                        )}
+                    </div>
+                    )}
+
+                    {/* 6. Server */}
+                    <div className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm print:border-0 print:shadow-none">
+                        <button onClick={() => toggleSecretsOnboardingSection('server')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
+                            <div className="flex items-center gap-3 font-bold text-slate-700"><Server className="w-5 h-5 text-indigo-500" /> 6. Server</div>
+                            <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${secretsOnboardingOpenSections['server'] ? 'rotate-90' : ''}`} />
+                        </button>
+                        {(secretsOnboardingOpenSections['server'] || typeof window !== 'undefined' && window.matchMedia('print').matches) && (
+                            <div className="p-6 border-t border-slate-100 space-y-4">
+                                {secretsOnboardingData.operatingModel === 'On-Prem' && (
+                                    <div className="p-3 bg-blue-50 text-blue-800 text-sm rounded-lg border border-blue-100 mb-4">
+                                        <strong>Hinweis:</strong> Bitte beantworten Sie die folgenden Fragen spezifisch für Ihre On-Prem Server-Umgebung.
+                                    </div>
+                                )}
+                                {renderSecretsOnboardingInput("Besteht Kontrolle über Code?", "codeControlServer", "text", undefined, ["Ja", "Nein"])}
+                                {renderSecretsOnboardingInput("Besteht Kontrolle über Konfigurationsdateien?", "configControlServer", "text", undefined, ["Ja", "Nein"])}
+                                {renderSecretsOnboardingInput("Sind Konfigurationsdateien zentral zugänglich?", "centralConfig", "text", undefined, ["Ja", "Nein"])}
+                                {renderSecretsOnboardingInput("Läuft die Anwendung auf einem Java-Webserver?", "javaWebserver", "text", undefined, ["Ja", "Nein", "Teilweise"])}
+                                {(secretsOnboardingData.javaWebserver === 'Ja' || secretsOnboardingData.javaWebserver === 'Teilweise') && (
+                                    <div className="pl-4 border-l-2 border-indigo-100 mt-2 space-y-4">
+                                        {renderSecretsOnboardingInput("Nutzt die Anwendung DataSources?", "dataSources", "text", undefined, ["Ja", "Nein"])}
+                                        {renderSecretsOnboardingInput("Zweck der DataSources", "dataSourcesPurpose")}
+                                        <div className="text-xs text-slate-500 italic">Relevant für Secrets-Injection in Java-Umgebungen.</div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* 7. Eigenschaften der Secrets */}
+                    <div className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm print:border-0 print:shadow-none">
+                        <button onClick={() => toggleSecretsOnboardingSection('properties')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
+                            <div className="flex items-center gap-3 font-bold text-slate-700"><Key className="w-5 h-5 text-indigo-500" /> 7. Eigenschaften der Secrets</div>
+                            <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${secretsOnboardingOpenSections['properties'] ? 'rotate-90' : ''}`} />
+                        </button>
+                        {(secretsOnboardingOpenSections['properties'] || typeof window !== 'undefined' && window.matchMedia('print').matches) && (
+                            <div className="p-6 border-t border-slate-100 space-y-4">
+                                {renderSecretsOnboardingMultiSelect("Welche Arten von Secrets werden genutzt?", "secretTypes", ["Passwörter", "API-Keys", "Zertifikate", "SSH-Keys"])}
+                                {renderSecretsOnboardingMultiSelect("Wie werden Secrets aktuell gespeichert?", "secretStorage", ["Config-Files", "ENV-Variablen", "Kubernetes Secrets", "Hard-coded", "Hardware-HSM"])}
+                                {((secretsOnboardingData.secretStorage as string[]) || []).includes('Hard-coded') && (
+                                    <div className="p-3 bg-rose-50 text-rose-800 text-sm rounded-lg border border-rose-100 flex gap-2">
+                                        <AlertTriangle className="w-5 h-5 shrink-0" />
+                                        <span><strong>Risiko:</strong> Hard-coded Secrets stellen ein hohes Sicherheitsrisiko dar und müssen priorisiert migriert werden.</span>
+                                    </div>
+                                )}
+                                {renderSecretsOnboardingInput("Werden Secrets auch für manuelle Prozesse genutzt?", "manualProcesses", "text", undefined, ["Ja", "Nein"])}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* 8. Rotation - Ist-Status */}
+                    <div className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm print:border-0 print:shadow-none">
+                        <button onClick={() => toggleSecretsOnboardingSection('rotation_status')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
+                            <div className="flex items-center gap-3 font-bold text-slate-700"><RefreshCw className="w-5 h-5 text-indigo-500" /> 8. Rotation – Ist-Status</div>
+                            <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${secretsOnboardingOpenSections['rotation_status'] ? 'rotate-90' : ''}`} />
+                        </button>
+                        {(secretsOnboardingOpenSections['rotation_status'] || typeof window !== 'undefined' && window.matchMedia('print').matches) && (
+                            <div className="p-6 border-t border-slate-100 space-y-4">
+                                {renderSecretsOnboardingInput("Gibt es Secrets, deren Rotation in der Verantwortung der Deka liegt?", "rotationResponsibility", "text", undefined, ["Ja", "Nein"])}
+                                {renderSecretsOnboardingMultiSelect("Gilt dies für:", "rotationLevel", ["Datenbankebene", "Anwendungsebene"])}
+                                {renderSecretsOnboardingInput("Wie erfolgt die bisherige Rotation?", "currentRotation", "text", undefined, ["Manuell", "Teilautomatisiert", "Vollautomatisiert", "Bereits über CyberArk"])}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* 9. Anbindungsvariante (Zielbild) */}
+                    <div className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm print:border-0 print:shadow-none">
+                        <button onClick={() => toggleSecretsOnboardingSection('target_image')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
+                            <div className="flex items-center gap-3 font-bold text-slate-700"><Link2 className="w-5 h-5 text-indigo-500" /> 9. Anbindungsvariante (Zielbild)</div>
+                            <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${secretsOnboardingOpenSections['target_image'] ? 'rotate-90' : ''}`} />
+                        </button>
+                        {(secretsOnboardingOpenSections['target_image'] || typeof window !== 'undefined' && window.matchMedia('print').matches) && (
+                            <div className="p-6 border-t border-slate-100 space-y-4">
+                                {renderSecretsOnboardingInput("Eingesetztes Secrets-Management-Tool", "targetTool", "text", undefined, ["CyberArk CP", "CyberArk CCP", "HashiCorp Vault"])}
+                                {renderSecretsOnboardingInput("Anbindungsvariante", "targetVariant", "text", undefined, ["Vollautomatisiert zur Laufzeit", "Hybrid", "Manuelle Inventarisierung"])}
+                                {renderSecretsOnboardingInput("Rotationsmechanismus", "targetRotationMech", "text", undefined, ["Automatisch", "Teilautomatisiert", "Manuell"])}
+                                {renderSecretsOnboardingInput("Zeitfenster der Rotation", "targetTimeWindow", "text", undefined, ["Untertägig", "Definiertes Zeitfenster", "Manuell"])}
+                                {renderSecretsOnboardingInput("Häufigkeit der Rotation", "targetFrequency", "text", undefined, ["Täglich", "Wöchentlich", "Individueller Zyklus", "1x pro Jahr"])}
+                            </div>
+                        )}
+                    </div>
+                </div>
+                )
+            ))}
+        </div>
+
+        {/* Footer */}
+        <div className="p-6 border-t border-slate-100 bg-white flex justify-end gap-4 print:hidden">
+            <button onClick={onClose} className="px-6 py-3 font-bold text-slate-500 hover:bg-slate-50 rounded-lg transition-colors">Schließen</button>
+            {!readOnly && (
+            <button 
+                onClick={activeTab === 'onboarding' ? handleOnboardingSave : activeTab === 'technical' ? handleTechnicalSave : activeTab === 'secrets' ? handleSecretsSave : handleSecretsOnboardingSave} 
+                disabled={activeTab === 'onboarding' ? onboardingSaving : activeTab === 'technical' ? technicalSaving : activeTab === 'secrets' ? secretsSaving : secretsOnboardingSaving} 
+                className="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg shadow-lg shadow-indigo-200 transition-all active:scale-95 flex items-center gap-2"
+            >
+                {(activeTab === 'onboarding' ? onboardingSaving : activeTab === 'technical' ? technicalSaving : activeTab === 'secrets' ? secretsSaving : secretsOnboardingSaving) ? <RefreshCw className="animate-spin w-5 h-5" /> : <Save className="w-5 h-5" />} Speichern
+            </button>
+            )}
+        </div>
+
+      </div>
+    </div>
+  );
+};
+
+const App = () => {
+  const [data, setData] = useState<DataRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [connectionState, setConnectionState] = useState<'online' | 'api_only' | 'offline'>('offline');
+  const [lastError, setLastError] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
+  const [editingRow, setEditingRow] = useState<DataRow | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
+  const [user, setUser] = useState<string | null>(getUser());
+  const [role, setRole] = useState<string | null>(getRole());
+  const [loginCreds, setLoginCreds] = useState({ username: '', password: '' });
+  const [history, setHistory] = useState<any[]>([]);
+  const [viewMode, setViewMode] = useState<'form' | 'history'>('form');
+  const [unifiedRow, setUnifiedRow] = useState<DataRow | null>(null);
+  const [initialTab, setInitialTab] = useState<'onboarding' | 'technical' | 'secrets' | 'secrets-onboarding'>('onboarding');
+  const [modalMode, setModalMode] = useState<'pam' | 'secrets'>('pam');
+  const [onboardingVariant, setOnboardingVariant] = useState<string>('');
+  const [filters, setFilters] = useState<Record<string, string>>({});
+  const [isAcceptanceConfirmOpen, setIsAcceptanceConfirmOpen] = useState(false);
+
+  const isReadOnly = role === 'readonly';
+
+  useEffect(() => { 
+    checkConnectivity(); 
+  }, []);
+
+  useEffect(() => {
+    if (isModalOpen && editingRow?.id) {
+        const fetchVariant = async () => {
+            try {
+                const token = getAccessToken();
+                const headers: HeadersInit = token ? { 'Authorization': `Bearer ${token}` } : {};
+                const res = await fetch(`${API_BASE_URL}/onboarding/${editingRow.id}`, { headers });
+                if (res.ok) {
+                    const json = await res.json();
+                    if (json.data) {
+                        const d = JSON.parse(json.data);
+                        setOnboardingVariant(d.selectedVariant || '');
+                    } else {
+                        setOnboardingVariant('');
+                    }
+                }
+            } catch (e) {
+                console.error(e);
+                setOnboardingVariant('');
+            }
+        };
+        fetchVariant();
+    } else {
+        setOnboardingVariant('');
+    }
+  }, [isModalOpen, editingRow]);
+
+  const checkConnectivity = async () => {
+    setLoading(true);
+    setLastError(null);
+    try {
+      const token = getAccessToken();
+      const headers: HeadersInit = token ? { 'Authorization': `Bearer ${token}` } : {};
+
+      const healthResp = await fetch(`${API_BASE_URL}/health`);
+      if (!healthResp.ok) throw new Error("API unreachable");
+      const health = await healthResp.json();
+      
+      if (health.database === 'connected') {
+        setConnectionState('online');
+        const dataResp = await fetch(`${API_BASE_URL}/data`, { headers });
+        
+        if (dataResp.status === 401 || dataResp.status === 403) {
+           if (user) handleLogout(); // Token expired
+           return;
+        }
+
+        const result = await dataResp.json();
+        if (Array.isArray(result)) {
+          setData(result);
+        } else {
+          setData([]);
+        }
+      } else {
+        setConnectionState('api_only');
+        setLastError(health.message || 'Datenbank-Verbindung fehlgeschlagen.');
+      }
+    } catch (err: any) {
+      setConnectionState('offline');
+      setLastError(err.message || 'Server.js nicht erreichbar.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredData = useMemo(() => {
+    return data.filter(row => {
+      // Global search
+      if (search && !JSON.stringify(row).toLowerCase().includes(search.toLowerCase())) {
+        return false;
+      }
+      // Column filters
+      for (const h of DEFAULT_HEADERS) {
+        const filterVal = filters[h]?.toLowerCase();
+        if (filterVal) {
+          const cellVal = String(row[h] || '').toLowerCase();
+          if (!cellVal.includes(filterVal)) return false;
+        }
+      }
+      return true;
+    });
+  }, [data, search, filters]);
+
+  const handleLoginSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const { user, role } = await login(loginCreds.username, loginCreds.password);
+      setUser(user);
+      setRole(role);
+      checkConnectivity();
+    } catch (err: any) {
+      alert(err.message);
+    }
+  };
+
+  const handleLogout = () => {
+    logout();
+    setUser(null);
+    setRole(null);
+    setData([]);
+    setConnectionState('api_only'); // Reset state visually
+  };
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingRow) return;
+    setSaveStatus('saving');
+    try {
+      const isUpdate = editingRow.id && !String(editingRow.id).startsWith('temp_');
+      const method = isUpdate ? 'PUT' : 'POST';
+      const url = isUpdate ? `${API_BASE_URL}/data/${editingRow.id}` : `${API_BASE_URL}/data`;
+      
+      const payload = { ...editingRow };
+      if (!isUpdate) delete payload.id;
+
+      const token = getAccessToken();
+      const headers: HeadersInit = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      const response = await fetch(url, {
+        method,
+        headers,
+        body: JSON.stringify(payload),
+      });
+      
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.error || 'Speichern fehlgeschlagen');
+      }
+      
+      setSaveStatus('success');
+      setTimeout(() => { 
+        setIsModalOpen(false); 
+        setSaveStatus('idle'); 
+        checkConnectivity(); 
+      }, 800);
+    } catch (err: any) {
+      setSaveStatus('error');
+      setLastError(err.message);
+      alert("Fehler beim Speichern: " + err.message);
+    }
+  };
+
+  const handleAcceptance = () => {
+    if (!editingRow?.id) return;
+    setIsAcceptanceConfirmOpen(true);
+  };
+
+  const confirmAcceptance = async () => {
+    setIsAcceptanceConfirmOpen(false);
+    const timestamp = new Date().toLocaleString('de-DE');
+    const acceptanceString = `${user} am ${timestamp}`;
+    const updatedRow = { ...editingRow, AbnahmePAMOnboarding: acceptanceString };
+    
+    setEditingRow(updatedRow);
+
+    try {
+        const token = getAccessToken();
+        const headers: HeadersInit = { 'Content-Type': 'application/json' };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+        
+        const url = `${API_BASE_URL}/data/${updatedRow.id}`;
+        const response = await fetch(url, {
+            method: 'PUT',
+            headers,
+            body: JSON.stringify(updatedRow),
+        });
+
+        if (!response.ok) throw new Error("Speichern fehlgeschlagen");
+        checkConnectivity();
+    } catch (e: any) {
+        alert("Fehler: " + e.message);
+    }
+  };
+
+  const handleRevokeAcceptance = async () => {
+    if (!editingRow?.id) return;
+    if (!window.confirm("Soll die Abnahme wirklich zurückgezogen werden?")) return;
+
+    const updatedRow = { ...editingRow, AbnahmePAMOnboarding: '' };
+    
+    setEditingRow(updatedRow);
+
+    try {
+        const token = getAccessToken();
+        const headers: HeadersInit = { 'Content-Type': 'application/json' };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+        
+        const url = `${API_BASE_URL}/data/${updatedRow.id}`;
+        const response = await fetch(url, {
+            method: 'PUT',
+            headers,
+            body: JSON.stringify(updatedRow),
+        });
+
+        if (!response.ok) throw new Error("Speichern fehlgeschlagen");
+        checkConnectivity();
+    } catch (e: any) {
+        alert("Fehler: " + e.message);
+    }
+  };
+
+  const handleFetchHistory = async (id: any) => {
+    if (!id) return;
+    try {
+      const token = getAccessToken();
+      const headers: HeadersInit = token ? { 'Authorization': `Bearer ${token}` } : {};
+      const response = await fetch(`${API_BASE_URL}/history/${id}`, { headers });
+      if (response.ok) {
+        const histData = await response.json();
+        setHistory(histData);
+        setViewMode('history');
+      }
+    } catch (err) {
+      alert("Fehler beim Laden der Historie");
+    }
+  };
+
+  const handleFullExcelExport = async () => {
+    if (!editingRow?.id) return;
+    try {
+      const token = getAccessToken();
+      const headers: HeadersInit = token ? { 'Authorization': `Bearer ${token}` } : {};
+      const id = editingRow.id;
+
+      // Lade alle Daten parallel
+      const [onbRes, techRes, secRes, secOnbRes] = await Promise.all([
+        fetch(`${API_BASE_URL}/onboarding/${id}`, { headers }),
+        fetch(`${API_BASE_URL}/technical/${id}`, { headers }),
+        fetch(`${API_BASE_URL}/secrets/${id}`, { headers }),
+        fetch(`${API_BASE_URL}/secrets-onboarding/${id}`, { headers })
+      ]);
+
+      const onbJson = await onbRes.json();
+      const techJson = await techRes.json();
+      const secJson = await secRes.json();
+      const secOnbJson = await secOnbRes.json();
+
+      const onbData = onbJson.data ? JSON.parse(onbJson.data) : {};
+      const techData = techJson.data ? JSON.parse(techJson.data) : {};
+      const secData = secJson.data ? JSON.parse(secJson.data) : {};
+      const secOnbData = secOnbJson.data ? JSON.parse(secOnbJson.data) : {};
+
+      const wb = XLSX.utils.book_new();
+
+      // 1. Übersicht & Onboarding
+      const overviewData = [
+        { Bereich: "Stammdaten", Feld: "Anwendungsname", Wert: editingRow.Name },
+        { Bereich: "Stammdaten", Feld: "ICTO", Wert: editingRow.ICTO },
+        { Bereich: "Stammdaten", Feld: "Kritikalität", Wert: editingRow.Kritikalität },
+        { Bereich: "Stammdaten", Feld: "tAV", Wert: editingRow.tAV },
+        ...Object.entries(onbData).map(([k, v]) => ({ Bereich: "Onboarding", Feld: k, Wert: typeof v === 'boolean' ? (v ? 'Ja' : 'Nein') : v }))
+      ];
+      const wsOverview = XLSX.utils.json_to_sheet(overviewData);
+      wsOverview['!cols'] = [{ wch: 20 }, { wch: 40 }, { wch: 60 }]; // Spaltenbreiten anpassen
+      XLSX.utils.book_append_sheet(wb, wsOverview, "Status & Onboarding");
+
+      // 2. Technische Struktur
+      const wsTech = XLSX.utils.aoa_to_sheet([["Technische Struktur Produktion"]]);
+      let techRow = 2;
+      const appendTable = (ws: XLSX.WorkSheet, title: string, data: any[], startRow: number) => {
+          if (!data || data.length === 0) return startRow;
+          XLSX.utils.sheet_add_aoa(ws, [[title]], { origin: `A${startRow}` });
+          XLSX.utils.sheet_add_json(ws, data, { origin: `A${startRow + 1}` });
+          return startRow + data.length + 3; // +3 für Titel, Header und Abstand
+      };
+      wsTech['!cols'] = Array(10).fill({ wch: 25 }); // Standardbreite für Tabellen
+
+      techRow = appendTable(wsTech, "1. Server / Betriebssysteme", techData.servers, techRow);
+      techRow = appendTable(wsTech, "2. Datenbanken", techData.databases, techRow);
+      techRow = appendTable(wsTech, "3. Portfreischaltungen", techData.ports, techRow);
+      techRow = appendTable(wsTech, "4. Safes", techData.safes, techRow);
+      techRow = appendTable(wsTech, "5. Safe Mitglieder", techData.safeMembers, techRow);
+      techRow = appendTable(wsTech, "6. Shared Accounts", techData.sharedAccounts, techRow);
+      techRow = appendTable(wsTech, "7. Berechtigungen", techData.permissions, techRow);
+      techRow = appendTable(wsTech, "8. Mapping", techData.mapping, techRow);
+      
+      XLSX.utils.book_append_sheet(wb, wsTech, "Technische Struktur");
+
+      // 3. Secrets Management
+      const wsSecrets = XLSX.utils.aoa_to_sheet([["Secrets Management Inventar"]]);
+      wsSecrets['!cols'] = Array(10).fill({ wch: 25 });
+      let secRow = 2;
+      
+      secRow = appendTable(wsSecrets, "1. Secret Inventory", secData.inventory, secRow);
+      secRow = appendTable(wsSecrets, "2. Safe Struktur", secData.safes, secRow);
+      secRow = appendTable(wsSecrets, "3. Mitglieder", secData.members, secRow);
+      secRow = appendTable(wsSecrets, "4. Mapping", secData.mapping, secRow);
+
+      XLSX.utils.book_append_sheet(wb, wsSecrets, "Secrets Inventar");
+
+      // 4. Secrets Onboarding
+      const secOnbRows = Object.entries(secOnbData).map(([k, v]) => ({ Frage: k, Antwort: Array.isArray(v) ? v.join(', ') : v }));
+      const wsSecOnb = XLSX.utils.json_to_sheet(secOnbRows);
+      wsSecOnb['!cols'] = [{ wch: 50 }, { wch: 50 }];
+      XLSX.utils.book_append_sheet(wb, wsSecOnb, "Secrets Onboarding");
+
+      XLSX.writeFile(wb, `Gesamtexport_${editingRow.ICTO}.xlsx`);
+    } catch (e) {
+      console.error(e);
+      alert("Fehler beim Erstellen des Excel-Exports.");
+    }
+  };
+
+  const exportToExcel = () => {
+    // Prepare data for Excel using the currently filtered data
+    const excelData = filteredData.map(row => {
+      const entry: any = {};
+      DEFAULT_HEADERS.forEach(h => {
+        entry[h] = row[h] || '';
+      });
+      return entry;
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(excelData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "PAM Governance");
+    
+    // Generate filename with current date
+    const dateStr = new Date().toISOString().split('T')[0];
+    XLSX.writeFile(workbook, `PAM_Governance_Export_${dateStr}.xlsx`);
+  };
+
+  const renderField = (fieldName: string) => {
+    const options = SELECT_OPTIONS[fieldName];
+    const isTechnical = ["ICTO", "id", "tAV"].includes(fieldName);
+
+    // AD User Picker für Personenfelder verwenden
+    if (["tAV", "Stellvertreter tAV", "fAV", "Betriebsverantwortlicher"].includes(fieldName)) {
+      return (
+        <UserPicker 
+          key={fieldName}
+          label={fieldName}
+          value={editingRow?.[fieldName] || ''}
+          onChange={(val: string) => setEditingRow({...editingRow, [fieldName]: val})}
+          readOnly={isReadOnly}
+          className="space-y-1.5"
+        />
+      );
+    }
+
+    if (fieldName === "Objektpflege") {
+        return (
+            <MultiUserPicker
+                key={fieldName}
+                label={fieldName}
+                value={editingRow?.[fieldName] || ''}
+                onChange={(val: string) => setEditingRow({...editingRow, [fieldName]: val})}
+                readOnly={isReadOnly}
+                className="space-y-1.5"
+            />
+        );
+    }
+    
+    // Special handling for Anbindungsvariante
+    if (fieldName === "Anbindungsvariante") {
+        return (
+            <div key={fieldName} className="space-y-1.5">
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-[0.1em] ml-1">
+                  {fieldName}
+                </label>
+                <div className="relative">
+                    <input 
+                        type="text" 
+                        className="w-full p-3.5 bg-slate-100 border border-slate-200 rounded-xl text-slate-500 font-semibold text-sm outline-none cursor-not-allowed"
+                        value={onboardingVariant || 'Nicht definiert'}
+                        disabled
+                        readOnly
+                    />
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                        <Lock className="w-4 h-4" />
+                    </div>
+                </div>
+                <p className="text-[10px] text-slate-400 ml-1 flex items-center gap-1">
+                    <Info className="w-3 h-3" />
+                    Wird aus PAM Onboarding ermittelt
+                </p>
+            </div>
+        );
+    }
+
+    return (
+      <div key={fieldName} className="space-y-1.5">
+        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-[0.1em] ml-1">
+          {fieldName}
+        </label>
+        {options ? (
+          <div className="relative group">
+            <select 
+              className={`w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-4 focus:ring-indigo-50 focus:border-indigo-500 transition-all outline-none font-semibold text-sm appearance-none cursor-pointer ${isTechnical ? 'font-mono' : ''}`}
+              value={editingRow?.[fieldName] || ''}
+              onChange={(e) => setEditingRow({...editingRow, [fieldName]: e.target.value})}
+              disabled={isReadOnly}
+            >
+              <option value="">Wählen...</option>
+              {options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+            </select>
+            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+          </div>
+        ) : (
+          <textarea 
+            rows={1}
+            className={`w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-4 focus:ring-indigo-50 focus:border-indigo-500 transition-all outline-none font-semibold text-sm resize-none ${isTechnical ? 'font-mono' : ''}`}
+            value={editingRow?.[fieldName] || ''}
+            onChange={(e) => setEditingRow({...editingRow, [fieldName]: e.target.value})}
+            disabled={isReadOnly}
+            onInput={(e: any) => {
+              e.target.style.height = 'auto';
+              e.target.style.height = e.target.scrollHeight + 'px';
+            }}
+          />
+        )}
+      </div>
+    );
+  };
+
+  if (!user) {
+    return (
+        <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+          <div className="bg-white w-full max-w-md rounded-xl shadow-2xl p-10 animate-in zoom-in-95 duration-300 border border-slate-100">
+            <div className="flex justify-center mb-8">
+                <div className="bg-indigo-600 p-5 rounded-lg shadow-xl shadow-indigo-200">
+                    <Database className="w-10 h-10 text-white" />
+                </div>
+            </div>
+            <h2 className="text-3xl font-black mb-2 text-slate-900 text-center tracking-tight">PXM Manager</h2>
+            <p className="text-slate-400 text-center mb-10 font-medium">Bitte melden Sie sich an, um fortzufahren.</p>
+            <form onSubmit={handleLoginSubmit} className="space-y-5">
+              <div>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 ml-1">Benutzername</label>
+                <input 
+                  autoFocus
+                  className="w-full p-4 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-4 focus:ring-indigo-50 focus:border-indigo-500 outline-none font-bold text-slate-700 transition-all"
+                  value={loginCreds.username}
+                  onChange={e => setLoginCreds({...loginCreds, username: e.target.value})}
+                  placeholder="Benutzername"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 ml-1">Passwort</label>
+                <input 
+                  type="password"
+                  className="w-full p-4 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-4 focus:ring-indigo-50 focus:border-indigo-500 outline-none font-bold text-slate-700 transition-all"
+                  value={loginCreds.password}
+                  onChange={e => setLoginCreds({...loginCreds, password: e.target.value})}
+                  placeholder="••••••••"
+                />
+              </div>
+              <button type="submit" className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold shadow-xl shadow-indigo-200 transition-all mt-6 active:scale-[0.98] flex justify-center items-center gap-2">
+                <LogIn className="w-5 h-5" /> Anmelden
+              </button>
+            </form>
+          </div>
+        </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-slate-50 text-slate-900 selection:bg-indigo-100 selection:text-indigo-900">
+      <header className="bg-white/80 backdrop-blur-md border-b sticky top-0 z-40 px-8 py-5 flex justify-between items-center shadow-sm">
+        <div className="flex items-center gap-5">
+          <div className={`p-2.5 rounded-lg text-white transition-all duration-700 shadow-lg ${
+            connectionState === 'online' ? 'bg-indigo-600 shadow-indigo-200' : 
+            connectionState === 'api_only' ? 'bg-amber-500 shadow-amber-200' : 'bg-rose-500 shadow-rose-200'
+          }`}>
+            <Database className={`w-6 h-6 ${connectionState === 'online' ? 'animate-pulse' : ''}`} />
+          </div>
+          <div>
+            <h1 className="text-2xl font-black tracking-[-0.03em] leading-none mb-1 text-slate-900">PXM Manager</h1>
+            <div className="flex items-center gap-2">
+               <span className="text-[10px] font-extrabold uppercase tracking-[0.15em] flex items-center gap-1.5">
+                 {connectionState === 'online' ? (
+                   <span className="text-emerald-500 flex items-center gap-1"><Wifi className="w-3.5 h-3.5" /> SQL ONLINE</span>
+                 ) : connectionState === 'api_only' ? (
+                   <span className="text-amber-500 flex items-center gap-1"><AlertTriangle className="w-3.5 h-3.5" /> DB KONFIG</span>
+                 ) : (
+                   <span className="text-rose-500 flex items-center gap-1"><WifiOff className="w-3.5 h-3.5" /> OFFLINE</span>
+                 )}
+               </span>
+            </div>
+          </div>
+        </div>
+        
+        <div className="flex items-center gap-4">
+          <button onClick={handleLogout} className="px-5 py-2 rounded-lg font-bold flex items-center gap-3 bg-slate-50 text-slate-500 border border-slate-100 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-100 transition-all">
+            <div className="flex flex-col items-end">
+                <span className="text-[10px] font-black uppercase tracking-wider text-indigo-500">{role === 'admin' ? 'Admin' : role === 'maintenance' ? 'Pflege' : 'Read Only'}</span>
+                <span className="text-sm leading-none">{user}</span>
+            </div>
+            <div className="h-8 w-px bg-slate-200 mx-1"></div>
+            <LogOut className="w-4 h-4" />
+          </button>
+
+          <button onClick={checkConnectivity} className="p-3 hover:bg-slate-100 rounded-lg transition-all active:scale-95 group" title="Aktualisieren">
+            <RefreshCw className={`w-5 h-5 text-slate-400 group-hover:text-slate-600 ${loading ? 'animate-spin' : ''}`} />
+          </button>
+          
+          <button 
+            onClick={exportToExcel}
+            disabled={data.length === 0}
+            className="px-5 py-3 rounded-lg font-extrabold flex items-center gap-2.5 border-2 border-slate-100 hover:border-slate-200 bg-white text-slate-600 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+          >
+            <FileDown className="w-5 h-5" /> Export
+          </button>
+
+          {!isReadOnly && role === 'admin' && (
+          <button 
+            disabled={connectionState !== 'online'}
+            onClick={() => { setEditingRow({}); setIsModalOpen(true); setViewMode('form'); }}
+            className={`px-6 py-3 rounded-lg font-extrabold flex items-center gap-2.5 shadow-xl transition-all active:scale-[0.98] ${
+              connectionState === 'online' 
+                ? 'bg-slate-900 hover:bg-black text-white' 
+                : 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'
+            }`}
+          >
+            <Plus className="w-5 h-5 stroke-[3px]" /> Neu
+          </button>
+          )}
+        </div>
+      </header>
+
+      <main className="p-10">
+        {connectionState === 'api_only' && (
+          <div className="mb-10 bg-amber-50 border border-amber-100 p-6 rounded-xl flex gap-5 items-start max-w-4xl mx-auto shadow-sm">
+            <div className="bg-amber-500 p-2.5 rounded-lg text-white shrink-0 shadow-lg shadow-amber-100"><Settings className="w-5 h-5" /></div>
+            <div>
+              <h3 className="font-extrabold text-amber-900 mb-1 tracking-tight">SQL Server Verbindung unvollständig</h3>
+              <p className="text-sm text-amber-800/80 mb-2 leading-relaxed font-medium">{lastError}</p>
+            </div>
+          </div>
+        )}
+
+        {connectionState === 'offline' ? (
+          <div className="bg-white p-16 rounded-xl shadow-2xl border border-slate-100 text-center max-w-2xl mx-auto mt-20">
+            <div className="bg-rose-50 w-24 h-24 rounded-xl flex items-center justify-center mx-auto mb-8 text-rose-500 shadow-inner">
+              <WifiOff className="w-12 h-12" />
+            </div>
+            <h2 className="text-3xl font-black mb-4 tracking-tight">Backend nicht erreichbar</h2>
+            <p className="text-slate-500 font-medium mb-10">Der Node.js Server wurde unter Port 3001 nicht gefunden.</p>
+            <button onClick={checkConnectivity} className="bg-indigo-600 text-white px-10 py-4 rounded-lg font-black hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-100 active:scale-95">Verbindung prüfen</button>
+          </div>
+        ) : (
+          <div className="space-y-8">
+            <div className="relative max-w-lg group">
+              <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 w-5 h-5 group-focus-within:text-indigo-500 transition-colors stroke-[2.5px]" />
+              <input 
+                type="text" 
+                placeholder="Katalog durchsuchen..." 
+                className="w-full pl-14 pr-6 py-4 bg-white border border-slate-200 rounded-lg focus:ring-[6px] focus:ring-indigo-50 focus:border-indigo-500 outline-none transition-all shadow-sm font-semibold placeholder:text-slate-300"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+
+            <div className="bg-white rounded-xl shadow-2xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
+              <div className="overflow-auto custom-scrollbar max-h-[calc(100vh-16rem)]">
+                <table className="w-full border-collapse min-w-[2200px]">
+                  <thead>
+                    <tr className="bg-slate-50/40 border-b border-slate-100">
+                      <th className="sticky left-0 top-0 bg-white z-30 px-4 py-4 text-center w-[80px] text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] shadow-[0_1px_0_#f1f5f9] align-top">
+                        <div className="mb-3">Status</div>
+                      </th>
+                      <th className="sticky left-[80px] top-0 bg-white z-30 px-4 py-4 text-center text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-r border-slate-50 shadow-[6px_0_12px_-6px_rgba(0,0,0,0.04),0_1px_0_#f1f5f9] align-top">
+                        <div className="mb-3">PAM Onboarding</div>
+                      </th>
+                      {DEFAULT_HEADERS.map(h => (
+                        <th key={h} className="sticky top-0 bg-white z-20 text-left px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] whitespace-nowrap shadow-[0_1px_0_#f1f5f9] align-top">
+                          <div className="mb-3 block">{h}</div>
+                          <input 
+                            type="text" 
+                            className="w-full p-2 bg-slate-50 border border-slate-200 rounded-md text-xs font-medium text-slate-600 focus:ring-2 focus:ring-indigo-500 outline-none normal-case tracking-normal placeholder:text-slate-300"
+                            placeholder={`Filter ${h}...`}
+                            value={filters[h] || ''}
+                            onChange={e => setFilters(prev => ({...prev, [h]: e.target.value}))}
+                          />
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-50">
+                    {filteredData.length === 0 ? (
+                      <tr>
+                        <td colSpan={DEFAULT_HEADERS.length + 2} className="py-24 text-center">
+                          <div className="flex flex-col items-center gap-3">
+                            {loading ? (
+                              <RefreshCw className="w-10 h-10 text-indigo-200 animate-spin" />
+                            ) : (
+                              <Database className="w-12 h-12 text-slate-100" />
+                            )}
+                            <p className="text-slate-400 font-extrabold tracking-tight">
+                              {loading ? 'DATEN WERDEN GELADEN...' : (data.length === 0 ? 'KEINE DATEN VORHANDEN' : 'KEINE TREFFER FÜR DIESEN FILTER')}
+                            </p>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : filteredData.map((row, i) => (
+                      <tr key={row.id || i} className="hover:bg-indigo-50/30 transition-colors group">
+                        <td className="sticky left-0 bg-white group-hover:bg-indigo-50/50 z-10 px-4 py-4 text-center w-[80px] whitespace-nowrap">
+                          <button 
+                            onClick={() => { setEditingRow(row); setIsModalOpen(true); setViewMode('form'); }} 
+                            className="p-2.5 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-md transition-all shadow-sm hover:shadow-md active:scale-90"
+                            title="Schnittstelleninformationen"
+                          >
+                            <FileCog className="w-5 h-5" />
+                          </button>
+                        </td>
+                        <td className="sticky left-[80px] bg-white group-hover:bg-indigo-50/50 z-10 px-4 py-4 text-center border-r border-slate-50 shadow-[6px_0_12px_-6px_rgba(0,0,0,0.04)] whitespace-nowrap">
+                          <button 
+                            onClick={() => { setUnifiedRow(row); setInitialTab('onboarding'); setModalMode('pam'); }} 
+                            className="p-2.5 text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-md transition-all shadow-sm hover:shadow-md active:scale-90"
+                            title="Status Onboarding"
+                          >
+                            <Rocket className="w-5 h-5" />
+                          </button>
+                          <button 
+                            onClick={() => { setUnifiedRow(row); setInitialTab('secrets-onboarding'); setModalMode('secrets'); }} 
+                            className="p-2.5 ml-2 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-md transition-all shadow-sm hover:shadow-md active:scale-90"
+                            title="Secrets Management"
+                          >
+                            <KeyRound className="w-5 h-5" />
+                          </button>
+                        </td>
+                        {DEFAULT_HEADERS.map(h => {
+                          const isTech = ["ICTO", "tAV"].includes(h);
+                          return (
+                            <td key={h} className={`px-8 py-5 text-sm font-bold text-slate-600 whitespace-nowrap max-w-md overflow-hidden text-ellipsis ${isTech ? 'font-mono text-indigo-500/80' : ''}`}>
+                              {row[h] || <span className="text-slate-200">/</span>}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+      </main>
+
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-10">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-xl transition-opacity" onClick={() => setIsModalOpen(false)}></div>
+          <div className="relative bg-white w-full max-w-5xl rounded-xl shadow-[0_32px_64px_-16px_rgba(0,0,0,0.2)] flex flex-col max-h-[94vh] border border-slate-200 overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="px-10 py-8 border-b border-slate-50 flex justify-between items-center bg-white sticky top-0 z-10">
+              <div>
+                <h2 className="text-3xl font-black tracking-tighter text-slate-900">
+                  {editingRow?.id ? 'Status Onboarding' : 'Neue Erfassung'}
+                </h2>
+                <div className="flex items-center gap-2 mt-1.5">
+                   <div className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></div>
+                   <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em]">PAM Governance Framework</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                {editingRow?.id && (
+                  <>
+                  <button 
+                    onClick={handleFullExcelExport}
+                    className="p-3 hover:bg-emerald-50 rounded-lg transition-all group text-emerald-600"
+                    title="Gesamtexport Excel"
+                  >
+                    <FileSpreadsheet className="w-6 h-6" />
+                  </button>
+                  <button 
+                    onClick={() => viewMode === 'history' ? setViewMode('form') : handleFetchHistory(editingRow.id)}
+                    className={`p-3 rounded-lg transition-all group ${viewMode === 'history' ? 'bg-indigo-50 text-indigo-600' : 'hover:bg-slate-50 text-slate-300 hover:text-slate-600'}`}
+                    title="Änderungshistorie"
+                  >
+                    <HistoryIcon className="w-6 h-6" />
+                  </button>
+                  </>
+                )}
+              <button onClick={() => setIsModalOpen(false)} className="p-3 hover:bg-slate-50 rounded-lg transition-all group">
+                <X className="w-7 h-7 text-slate-300 group-hover:text-slate-600" />
+              </button>
+              </div>
+            </div>
+            
+            {viewMode === 'history' ? (
+              <div className="flex-1 overflow-y-auto p-10 custom-scrollbar">
+                <h3 className="text-xl font-bold mb-6 flex items-center gap-2 text-slate-800">
+                  <Clock className="w-6 h-6 text-indigo-500" /> Änderungsprotokoll
+                </h3>
+                <div className="space-y-4 relative before:absolute before:left-[19px] before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-100">
+                  {history.length === 0 && <p className="text-slate-400 pl-10">Keine Änderungen protokolliert.</p>}
+                  {history.map((entry: any) => (
+                    <div key={entry.id} className="relative pl-10">
+                      <div className="absolute left-0 top-1.5 w-[40px] h-[40px] bg-white border-4 border-slate-50 rounded-full flex items-center justify-center z-10">
+                        <div className={`w-3 h-3 rounded-full ${entry.action === 'ERSTELLT' ? 'bg-emerald-400' : 'bg-indigo-400'}`}></div>
+                      </div>
+                      <div className="bg-slate-50 p-5 rounded-lg border border-slate-100 hover:border-indigo-100 transition-colors">
+                        <div className="flex justify-between items-start mb-2">
+                          <div>
+                            <span className="block font-bold text-slate-800">{entry.username}</span>
+                            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{entry.action}</span>
+                          </div>
+                          <span className="text-xs font-mono text-slate-400 bg-white px-2 py-1 rounded-md border border-slate-100">
+                            {new Date(entry.timestamp).toLocaleString()}
+                          </span>
+                        </div>
+                        {(() => {
+                          try {
+                            const details = JSON.parse(entry.details);
+                            if (Array.isArray(details)) {
+                              return (
+                                <div className="mt-3 space-y-1 border-t border-slate-100 pt-3">
+                                  {details.map((change: any, i: number) => (
+                                    <div key={i} className="text-xs flex flex-wrap items-center gap-x-2 gap-y-1 text-slate-600">
+                                      <span className="font-bold bg-white px-1.5 py-0.5 rounded-sm border border-slate-200 text-slate-700">{change.field}</span>
+                                      <span className="line-through opacity-50 decoration-rose-400/50">{change.old || <span className="italic text-[10px]">leer</span>}</span>
+                                      <span className="text-slate-300">➜</span>
+                                      <span className="font-bold text-indigo-600">{change.new || <span className="italic text-[10px]">leer</span>}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              );
+                            }
+                          } catch (e) {}
+                          return null;
+                        })()}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <form onSubmit={handleSave} className="flex-1 overflow-y-auto p-10 space-y-16 custom-scrollbar">
+                {FIELD_GROUPS.map((group, idx) => (
+                  <div key={idx} className="space-y-8">
+                    <div className="flex items-center gap-4 border-b border-slate-100 pb-4">
+                      <div className="p-2.5 bg-slate-50 rounded-lg shadow-inner">{group.icon}</div>
+                      <h3 className="text-xs font-black uppercase tracking-[0.25em] text-slate-500">{group.title}</h3>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8 px-2">
+                      {group.fields.map(fieldName => renderField(fieldName))}
+                    </div>
+                  </div>
+                ))}
+
+                {/* Abnahme Bereich */}
+                <div className="space-y-8 border-t border-slate-100 pt-8">
+                    <div className="flex items-center gap-4">
+                        <div className="p-2.5 bg-slate-50 rounded-lg shadow-inner"><CheckCircle className="w-5 h-5 text-emerald-500" /></div>
+                        <h3 className="text-xs font-black uppercase tracking-[0.25em] text-slate-500">Abnahme PAM Onboarding</h3>
+                    </div>
+                    
+                    {editingRow?.AbnahmePAMOnboarding ? (
+                        <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-6 flex items-center justify-between gap-4">
+                            <div className="flex items-center gap-4">
+                                <div className="bg-emerald-100 p-3 rounded-full">
+                                    <CheckCircle className="w-8 h-8 text-emerald-600" />
+                                </div>
+                                <div>
+                                    <h4 className="font-bold text-emerald-900 text-lg">Abnahme erteilt</h4>
+                                    <p className="text-emerald-700 font-medium">
+                                        Durch {editingRow.AbnahmePAMOnboarding}
+                                    </p>
+                                </div>
+                            </div>
+                            {role === 'admin' && (
+                                <button type="button" onClick={handleRevokeAcceptance} className="px-4 py-2 bg-white border border-emerald-200 text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800 rounded-lg text-sm font-bold transition-colors shadow-sm">
+                                    Zurückziehen
+                                </button>
+                            )}
+                        </div>
+                    ) : (
+                        (role === 'maintenance') ? (
+                            <div className="bg-slate-50 border border-slate-100 rounded-xl p-6">
+                                <p className="text-slate-500 mb-4 text-sm">Bitte bestätigen Sie die korrekte Umsetzung der CyberArk Anbindung nach erfolgreichem Test.</p>
+                                <button type="button" onClick={handleAcceptance} className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg shadow-lg shadow-emerald-100 transition-all active:scale-[0.98] flex justify-center items-center gap-2"><CheckCircle className="w-5 h-5" /> Abnahme erteilen</button>
+                            </div>
+                        ) : <div className="p-4 text-center text-slate-400 italic bg-slate-50 rounded-xl border border-slate-100">Abnahme noch ausstehend.</div>
+                    )}
+                </div>
+
+                <div className="pb-10"></div>
+              </form>
+            )}
+
+            <div className="p-10 bg-white/80 backdrop-blur-md border-t border-slate-50 flex justify-end gap-5 sticky bottom-0 z-10">
+              <button type="button" onClick={() => setIsModalOpen(false)} className="px-8 py-4 font-extrabold text-slate-400 hover:text-slate-600 transition-colors">Abbrechen</button>
+              {viewMode === 'form' && (
+              !isReadOnly && (
+              <button 
+                type="submit" 
+                onClick={handleSave}
+                disabled={saveStatus === 'saving'}
+                className={`px-14 py-4 rounded-lg font-black text-white flex items-center gap-3 transition-all shadow-2xl active:scale-[0.97] ${
+                  saveStatus === 'success' ? 'bg-emerald-500 shadow-emerald-200' : 'bg-slate-900 hover:bg-black shadow-slate-200'
+                }`}
+              >
+                {saveStatus === 'saving' ? <RefreshCw className="w-5 h-5 animate-spin" /> : 
+                 saveStatus === 'success' ? <CheckCircle className="w-5 h-5 stroke-[3px]" /> : <Save className="w-5 h-5 stroke-[2.5px]" />}
+                {saveStatus === 'success' ? 'FERTIG!' : (editingRow?.id ? 'ÄNDERUNGEN SPEICHERN' : 'EINTRAG ANLEGEN')}
+              </button>
+              )
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {unifiedRow && (
+        <UnifiedAppModal 
+            isOpen={!!unifiedRow} 
+            onClose={() => setUnifiedRow(null)} 
+            governanceRow={unifiedRow} 
+            user={user} 
+            initialTab={initialTab}
+            mode={modalMode}
+            readOnly={isReadOnly}
+        />
+      )}
+
+      {isAcceptanceConfirmOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 sm:p-10">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onClick={() => setIsAcceptanceConfirmOpen(false)}></div>
+          <div className="relative bg-white w-full max-w-lg rounded-xl shadow-2xl p-8 animate-in zoom-in-95 duration-200 border border-slate-100">
+            <div className="flex flex-col items-center text-center gap-4">
+                <div className="p-4 bg-emerald-50 rounded-full">
+                    <CheckCircle className="w-10 h-10 text-emerald-500" />
+                </div>
+                <h3 className="text-xl font-black text-slate-900">Abnahme bestätigen</h3>
+                <p className="text-slate-500 font-medium leading-relaxed">
+                    Ich bestätige die technische und fachliche Korrektheit der Cyberark Anbindung. Diese wurde erfolgreich getestet und übergeben.
+                </p>
+                <div className="grid grid-cols-2 gap-4 w-full mt-4">
+                    <button 
+                        onClick={() => setIsAcceptanceConfirmOpen(false)}
+                        className="py-3 px-4 bg-slate-50 hover:bg-slate-100 text-slate-600 font-bold rounded-lg transition-colors"
+                    >
+                        Abbrechen
+                    </button>
+                    <button 
+                        onClick={confirmAcceptance}
+                        className="py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg shadow-lg shadow-emerald-100 transition-all active:scale-[0.98]"
+                    >
+                        Bestätigen
+                    </button>
+                </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const rootElement = document.getElementById('root');
+if (rootElement) {
+  const root = createRoot(rootElement);
+  root.render(<App />);
+}
