@@ -79,7 +79,7 @@ app.post('/api/login', async (req, res) => {
 
     const client = new Client({
         url: adConfig.url,
-        // tlsOptions: { rejectUnauthorized: false } // Uncomment if using self-signed certs on LDAPS
+        tlsOptions: { rejectUnauthorized: false }
     });
 
     try {
@@ -136,6 +136,9 @@ app.post('/api/login', async (req, res) => {
         return res.json({ token, user: username, role: role });
     } catch (err) {
         console.error('[LOGIN] AD Auth Error:', err);
+        if (err.message && (err.message.includes('integrity checking') || err.message.includes('00002028'))) {
+            console.error('!!! WICHTIG: Der AD-Server verlangt LDAP-Signing. Bitte ändern Sie die AD_URL in der .env Datei auf "ldaps://..." (Port 636). !!!');
+        }
         try { await client.unbind(); } catch (e) {}
         return res.status(401).json({ message: 'Authentifizierung fehlgeschlagen' });
     }
@@ -280,7 +283,7 @@ app.get('/api/ad/search', authenticateToken, async (req, res) => {
 
     const client = new Client({
         url: adConfig.url,
-        // tlsOptions: { rejectUnauthorized: false }
+        tlsOptions: { rejectUnauthorized: false }
     });
 
     // Service User automatisch qualifizieren, falls kein UPN/Domain angegeben ist
@@ -315,6 +318,9 @@ app.get('/api/ad/search', authenticateToken, async (req, res) => {
         res.json(users);
     } catch (err) {
         console.error('[AD SEARCH] Error:', err);
+        if (err.message && (err.message.includes('integrity checking') || err.message.includes('00002028'))) {
+            console.error('!!! WICHTIG: Der AD-Server verlangt LDAP-Signing. Bitte ändern Sie die AD_URL in der .env Datei auf "ldaps://..." (Port 636). !!!');
+        }
         try { await client.unbind(); } catch (e) {}
         res.json([]); 
     }
