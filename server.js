@@ -300,12 +300,6 @@ async function getAdClient() {
     console.log(`[AD] Establishing persistent connection...`);
     await client.bind(serviceUserUpn, AD_SERVICE_PASS);
     
-    // Reset client on error so next request reconnects
-    client.on('error', (err) => {
-        console.error('[AD] Connection error:', err);
-        adSearchClient = null;
-    });
-
     adSearchClient = client;
     return adSearchClient;
 }
