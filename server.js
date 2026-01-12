@@ -16,7 +16,7 @@ app.use(cors());
 
 const dbPort = process.env.DB_PORT ? parseInt(process.env.DB_PORT) : undefined;
 // Wenn ein Port explizit gesetzt ist, darf instanceName nicht verwendet werden (direkte TCP Verbindung)
-const dbInstance = dbPort ? undefined : (process.env.DB_INSTANCE || 'SQLEXPRESS');
+const dbInstance = dbPort ? undefined : (process.env.DB_INSTANCE || undefined);
 
 const config = {
     user: process.env.DB_USER || 'pxm',
