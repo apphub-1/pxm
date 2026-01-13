@@ -443,7 +443,7 @@ const MultiSelectPicker = ({ value, onChange, options, readOnly }: any) => {
   return (
     <div className="relative w-full" ref={wrapperRef}>
       <div 
-        className={`w-full p-2 bg-white border rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 min-h-[38px] flex flex-wrap gap-1 items-center cursor-pointer ${readOnly ? 'opacity-60 cursor-not-allowed' : ''} border-slate-200`}
+        className={`w-full p-2 bg-white border rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 min-h-[38px] flex flex-wrap gap-1 items-center cursor-pointer transition-all duration-200 ease-in-out ${readOnly ? 'opacity-60 cursor-not-allowed' : ''} border-slate-200`}
         onClick={() => !readOnly && setIsOpen(!isOpen)}
       >
         {selectedValues.length === 0 && <span className="text-slate-400 text-sm">Wählen...</span>}
@@ -1324,7 +1324,7 @@ const UnifiedAppModal = ({
                 <div className="space-y-4 max-w-4xl mx-auto">
                     
                     {/* Section 2: Architecture */}
-                    <div className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm print:border-0 print:shadow-none">
+                    <div className="bg-white rounded-lg border border-slate-200 shadow-sm print:border-0 print:shadow-none">
                         <button onClick={() => toggleOnboardingSection('architecture')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
                             <div className="flex items-center gap-3 font-bold text-slate-700"><Database className="w-5 h-5 text-indigo-500" /> 1. Architektur</div>
                             <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${onboardingOpenSections['architecture'] ? 'rotate-90' : ''}`} />
@@ -1345,7 +1345,7 @@ const UnifiedAppModal = ({
                     </div>
 
                     {/* Section 3: Technology */}
-                    <div className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm print:border-0 print:shadow-none">
+                    <div className="bg-white rounded-lg border border-slate-200 shadow-sm print:border-0 print:shadow-none">
                         <button onClick={() => toggleOnboardingSection('technology')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
                             <div className="flex items-center gap-3 font-bold text-slate-700"><Settings className="w-5 h-5 text-slate-500" /> 2. Anwendungstechnologie</div>
                             <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${onboardingOpenSections['technology'] ? 'rotate-90' : ''}`} />
@@ -1363,7 +1363,7 @@ const UnifiedAppModal = ({
                     </div>
 
                     {/* Section 4: Login */}
-                    <div className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm print:border-0 print:shadow-none">
+                    <div className="bg-white rounded-lg border border-slate-200 shadow-sm print:border-0 print:shadow-none">
                         <button onClick={() => toggleOnboardingSection('login')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
                             <div className="flex items-center gap-3 font-bold text-slate-700"><LogIn className="w-5 h-5 text-emerald-500" /> 3. Anmeldeverfahren</div>
                             <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${onboardingOpenSections['login'] ? 'rotate-90' : ''}`} />
@@ -1380,7 +1380,7 @@ const UnifiedAppModal = ({
 
                     {/* Section 5: Password (Conditional) */}
                     {onboardingData.accountType !== 'Domain Accounts' && (
-                    <div className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm print:border-0 print:shadow-none">
+                    <div className="bg-white rounded-lg border border-slate-200 shadow-sm print:border-0 print:shadow-none">
                         <button onClick={() => toggleOnboardingSection('password')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
                             <div className="flex items-center gap-3 font-bold text-slate-700"><ShieldCheck className="w-5 h-5 text-rose-500" /> 4. Passwortwechsel</div>
                             <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${onboardingOpenSections['password'] ? 'rotate-90' : ''}`} />
@@ -1400,7 +1400,7 @@ const UnifiedAppModal = ({
                     )}
 
                     {/* Section 6: Test */}
-                    <div className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm print:border-0 print:shadow-none">
+                    <div className="bg-white rounded-lg border border-slate-200 shadow-sm print:border-0 print:shadow-none">
                         <button onClick={() => toggleOnboardingSection('test')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
                             <div className="flex items-center gap-3 font-bold text-slate-700"><FileCheck className="w-5 h-5 text-amber-500" /> 5. Testuser & Umgebung</div>
                             <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${onboardingOpenSections['test'] ? 'rotate-90' : ''}`} />
@@ -1415,7 +1415,7 @@ const UnifiedAppModal = ({
                     </div>
 
                     {/* Section 7: Emergency */}
-                    <div className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm print:border-0 print:shadow-none">
+                    <div className="bg-white rounded-lg border border-slate-200 shadow-sm print:border-0 print:shadow-none">
                         <button onClick={() => toggleOnboardingSection('emergency')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
                             <div className="flex items-center gap-3 font-bold text-slate-700"><AlertTriangle className="w-5 h-5 text-rose-500" /> 6. Notfallprozess</div>
                             <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${onboardingOpenSections['emergency'] ? 'rotate-90' : ''}`} />
@@ -1429,7 +1429,7 @@ const UnifiedAppModal = ({
                     </div>
 
                     {/* Section 8: Matrix */}
-                    <div className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm print:border-0 print:shadow-none">
+                    <div className="bg-white rounded-lg border border-slate-200 shadow-sm print:border-0 print:shadow-none">
                         <button onClick={() => toggleOnboardingSection('matrix')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
                             <div className="flex items-center gap-3 font-bold text-slate-700"><Link2 className="w-5 h-5 text-indigo-600" /> 7. Vereinbarte Anbindungsvariante</div>
                             <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${onboardingOpenSections['matrix'] ? 'rotate-90' : ''}`} />
@@ -1500,7 +1500,7 @@ const UnifiedAppModal = ({
                 <div className="space-y-6 max-w-[85rem] mx-auto">
                     
                     {/* 1. Servers */}
-                    <div className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm print:border-0 print:shadow-none">
+                    <div className="bg-white rounded-lg border border-slate-200 shadow-sm print:border-0 print:shadow-none">
                         <button onClick={() => toggleTechnicalSection('servers')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
                             <div className="flex items-center gap-3 font-bold text-slate-700"><Server className="w-5 h-5 text-blue-500" /> 1. Server / Betriebssysteme</div>
                             <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${technicalOpenSections['servers'] ? 'rotate-90' : ''}`} />
@@ -1523,7 +1523,7 @@ const UnifiedAppModal = ({
                     </div>
 
                     {/* 2. Databases */}
-                    <div className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm print:border-0 print:shadow-none">
+                    <div className="bg-white rounded-lg border border-slate-200 shadow-sm print:border-0 print:shadow-none">
                         <button onClick={() => toggleTechnicalSection('databases')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
                             <div className="flex items-center gap-3 font-bold text-slate-700"><Database className="w-5 h-5 text-indigo-500" /> 2. Datenbanken / Server</div>
                             <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${technicalOpenSections['databases'] ? 'rotate-90' : ''}`} />
@@ -1545,7 +1545,7 @@ const UnifiedAppModal = ({
                     </div>
 
                     {/* 3. Ports */}
-                    <div className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm print:border-0 print:shadow-none">
+                    <div className="bg-white rounded-lg border border-slate-200 shadow-sm print:border-0 print:shadow-none">
                         <button onClick={() => toggleTechnicalSection('ports')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
                             <div className="flex items-center gap-3 font-bold text-slate-700"><Network className="w-5 h-5 text-emerald-500" /> 3. Portfreischaltungen</div>
                             <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${technicalOpenSections['ports'] ? 'rotate-90' : ''}`} />
@@ -1553,8 +1553,7 @@ const UnifiedAppModal = ({
                         {(technicalOpenSections['ports'] || typeof window !== 'undefined' && window.matchMedia('print').matches) && (
                             <div className="p-6 border-t border-slate-100">
                                 {renderTable('ports', [
-                                  { key: 'fromServer', label: 'Von Server', type: 'multiselect', options: ['psm1', 'psm2', 'psm3', 'psm4', 'psm5', 'psm6', 'psmp'], width: '200px' },
-                                  { key: 'fromIp', label: 'Von IP' },
+                                  { key: 'fromServer', label: 'Von Server', type: 'multiselect', options: ['psm1', 'psm2', 'psm3', 'psm4', 'psm5', 'psm6', 'psmp'], width: '300px' },
                                   { key: 'fromStage', label: 'Von Stage', type: 'select', options: ['Prod', 'Test', 'Dev'] },
                                   { key: 'toServer', label: 'Nach Server', type: 'select', options: serverOptions },
                                   { key: 'toIp', label: 'Nach IP' },
@@ -1569,7 +1568,7 @@ const UnifiedAppModal = ({
                     </div>
 
                     {/* 4. Safes */}
-                    <div className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm print:border-0 print:shadow-none">
+                    <div className="bg-white rounded-lg border border-slate-200 shadow-sm print:border-0 print:shadow-none">
                         <button onClick={() => toggleTechnicalSection('safes')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
                             <div className="flex items-center gap-3 font-bold text-slate-700"><Lock className="w-5 h-5 text-amber-500" /> 4. Safe-Struktur (CyberArk)</div>
                             <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${technicalOpenSections['safes'] ? 'rotate-90' : ''}`} />
@@ -1591,7 +1590,7 @@ const UnifiedAppModal = ({
                     </div>
 
                     {/* 5. Safe Members */}
-                    <div className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm print:border-0 print:shadow-none">
+                    <div className="bg-white rounded-lg border border-slate-200 shadow-sm print:border-0 print:shadow-none">
                         <button onClick={() => toggleTechnicalSection('safeMembers')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
                             <div className="flex items-center gap-3 font-bold text-slate-700"><Users className="w-5 h-5 text-purple-500" /> 5. Mitglieder der Safes</div>
                             <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${technicalOpenSections['safeMembers'] ? 'rotate-90' : ''}`} />
@@ -1615,7 +1614,7 @@ const UnifiedAppModal = ({
                     </div>
 
                     {/* 6. Shared Accounts */}
-                    <div className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm print:border-0 print:shadow-none">
+                    <div className="bg-white rounded-lg border border-slate-200 shadow-sm print:border-0 print:shadow-none">
                         <button onClick={() => toggleTechnicalSection('sharedAccounts')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
                             <div className="flex items-center gap-3 font-bold text-slate-700"><Key className="w-5 h-5 text-rose-500" /> 6. Shared Accounts</div>
                             <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${technicalOpenSections['sharedAccounts'] ? 'rotate-90' : ''}`} />
@@ -1637,7 +1636,7 @@ const UnifiedAppModal = ({
                     </div>
 
                     {/* 7. Permissions */}
-                    <div className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm print:border-0 print:shadow-none">
+                    <div className="bg-white rounded-lg border border-slate-200 shadow-sm print:border-0 print:shadow-none">
                         <button onClick={() => toggleTechnicalSection('permissions')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
                             <div className="flex items-center gap-3 font-bold text-slate-700"><Shield className="w-5 h-5 text-cyan-500" /> 7. Berechtigungszuordnungen</div>
                             <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${technicalOpenSections['permissions'] ? 'rotate-90' : ''}`} />
@@ -1658,7 +1657,7 @@ const UnifiedAppModal = ({
                     </div>
 
                     {/* 8. Mapping */}
-                    <div className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm print:border-0 print:shadow-none">
+                    <div className="bg-white rounded-lg border border-slate-200 shadow-sm print:border-0 print:shadow-none">
                         <button onClick={() => toggleTechnicalSection('mapping')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
                             <div className="flex items-center gap-3 font-bold text-slate-700"><Link className="w-5 h-5 text-indigo-600" /> 8. Shared Accounts zu Safe</div>
                             <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${technicalOpenSections['mapping'] ? 'rotate-90' : ''}`} />
@@ -1730,7 +1729,7 @@ const UnifiedAppModal = ({
                 <div className="space-y-6 max-w-[85rem] mx-auto">
                     
                     {/* 1. Secret Inventory */}
-                    <div className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm print:border-0 print:shadow-none">
+                    <div className="bg-white rounded-lg border border-slate-200 shadow-sm print:border-0 print:shadow-none">
                         <button onClick={() => toggleSecretsSection('inventory')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
                             <div className="flex items-center gap-3 font-bold text-slate-700"><KeyRound className="w-5 h-5 text-indigo-500" /> 1. Secret Inventory</div>
                             <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${secretsOpenSections['inventory'] ? 'rotate-90' : ''}`} />
@@ -1756,7 +1755,7 @@ const UnifiedAppModal = ({
                     </div>
 
                     {/* 2. Safe Structure */}
-                    <div className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm print:border-0 print:shadow-none">
+                    <div className="bg-white rounded-lg border border-slate-200 shadow-sm print:border-0 print:shadow-none">
                         <button onClick={() => toggleSecretsSection('safes')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
                             <div className="flex items-center gap-3 font-bold text-slate-700"><Lock className="w-5 h-5 text-amber-500" /> 2. Safe- / Pfad-Struktur</div>
                             <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${secretsOpenSections['safes'] ? 'rotate-90' : ''}`} />
@@ -1784,7 +1783,7 @@ const UnifiedAppModal = ({
                     </div>
 
                     {/* 3. Members */}
-                    <div className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm print:border-0 print:shadow-none">
+                    <div className="bg-white rounded-lg border border-slate-200 shadow-sm print:border-0 print:shadow-none">
                         <button onClick={() => toggleSecretsSection('members')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
                             <div className="flex items-center gap-3 font-bold text-slate-700"><Users className="w-5 h-5 text-purple-500" /> 3. Mitglieder der Safes</div>
                             <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${secretsOpenSections['members'] ? 'rotate-90' : ''}`} />
@@ -1808,7 +1807,7 @@ const UnifiedAppModal = ({
                     </div>
 
                     {/* 4. Mapping */}
-                    <div className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm print:border-0 print:shadow-none">
+                    <div className="bg-white rounded-lg border border-slate-200 shadow-sm print:border-0 print:shadow-none">
                         <button onClick={() => toggleSecretsSection('mapping')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
                             <div className="flex items-center gap-3 font-bold text-slate-700"><Link className="w-5 h-5 text-emerald-500" /> 4. Secrets zu Safe</div>
                             <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${secretsOpenSections['mapping'] ? 'rotate-90' : ''}`} />
@@ -1879,7 +1878,7 @@ const UnifiedAppModal = ({
                 ) : (
                 <div className="space-y-6 max-w-4xl mx-auto">
                     {/* 1. Infrastruktur */}
-                    <div className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm print:border-0 print:shadow-none">
+                    <div className="bg-white rounded-lg border border-slate-200 shadow-sm print:border-0 print:shadow-none">
                         <button onClick={() => toggleSecretsOnboardingSection('infrastructure')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
                             <div className="flex items-center gap-3 font-bold text-slate-700"><Server className="w-5 h-5 text-indigo-500" /> 1. Infrastruktur</div>
                             <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${secretsOnboardingOpenSections['infrastructure'] ? 'rotate-90' : ''}`} />
@@ -1894,7 +1893,7 @@ const UnifiedAppModal = ({
                     </div>
 
                     {/* 2. Tool-Nutzung */}
-                    <div className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm print:border-0 print:shadow-none">
+                    <div className="bg-white rounded-lg border border-slate-200 shadow-sm print:border-0 print:shadow-none">
                         <button onClick={() => toggleSecretsOnboardingSection('tools')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
                             <div className="flex items-center gap-3 font-bold text-slate-700"><Settings className="w-5 h-5 text-indigo-500" /> 2. Tool-Nutzung</div>
                             <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${secretsOnboardingOpenSections['tools'] ? 'rotate-90' : ''}`} />
@@ -1911,7 +1910,7 @@ const UnifiedAppModal = ({
 
                     {/* 3. Container - Standalone */}
                     {secretsOnboardingData.appType === 'Container' && (
-                    <div className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm print:border-0 print:shadow-none">
+                    <div className="bg-white rounded-lg border border-slate-200 shadow-sm print:border-0 print:shadow-none">
                         <button onClick={() => toggleSecretsOnboardingSection('container_standalone')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
                             <div className="flex items-center gap-3 font-bold text-slate-700"><Database className="w-5 h-5 text-indigo-500" /> 3. Container – Standalone</div>
                             <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${secretsOnboardingOpenSections['container_standalone'] ? 'rotate-90' : ''}`} />
@@ -1926,7 +1925,7 @@ const UnifiedAppModal = ({
 
                     {/* 4. Container - K8s */}
                     {secretsOnboardingData.appType === 'Container' && (
-                    <div className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm print:border-0 print:shadow-none">
+                    <div className="bg-white rounded-lg border border-slate-200 shadow-sm print:border-0 print:shadow-none">
                         <button onClick={() => toggleSecretsOnboardingSection('container_k8s')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
                             <div className="flex items-center gap-3 font-bold text-slate-700"><Cloud className="w-5 h-5 text-indigo-500" /> 4. Container – Kubernetes / OpenShift</div>
                             <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${secretsOnboardingOpenSections['container_k8s'] ? 'rotate-90' : ''}`} />
@@ -1946,7 +1945,7 @@ const UnifiedAppModal = ({
 
                     {/* 5. Cloud Computing */}
                     {(secretsOnboardingData.operatingModel === 'Cloud' || secretsOnboardingData.operatingModel === 'Hybrid') && (
-                    <div className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm print:border-0 print:shadow-none">
+                    <div className="bg-white rounded-lg border border-slate-200 shadow-sm print:border-0 print:shadow-none">
                         <button onClick={() => toggleSecretsOnboardingSection('cloud')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
                             <div className="flex items-center gap-3 font-bold text-slate-700"><Cloud className="w-5 h-5 text-indigo-500" /> 5. Cloud Computing</div>
                             <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${secretsOnboardingOpenSections['cloud'] ? 'rotate-90' : ''}`} />
@@ -1961,7 +1960,7 @@ const UnifiedAppModal = ({
                     )}
 
                     {/* 6. Server */}
-                    <div className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm print:border-0 print:shadow-none">
+                    <div className="bg-white rounded-lg border border-slate-200 shadow-sm print:border-0 print:shadow-none">
                         <button onClick={() => toggleSecretsOnboardingSection('server')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
                             <div className="flex items-center gap-3 font-bold text-slate-700"><Server className="w-5 h-5 text-indigo-500" /> 6. Server</div>
                             <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${secretsOnboardingOpenSections['server'] ? 'rotate-90' : ''}`} />
@@ -1989,7 +1988,7 @@ const UnifiedAppModal = ({
                     </div>
 
                     {/* 7. Eigenschaften der Secrets */}
-                    <div className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm print:border-0 print:shadow-none">
+                    <div className="bg-white rounded-lg border border-slate-200 shadow-sm print:border-0 print:shadow-none">
                         <button onClick={() => toggleSecretsOnboardingSection('properties')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
                             <div className="flex items-center gap-3 font-bold text-slate-700"><Key className="w-5 h-5 text-indigo-500" /> 7. Eigenschaften der Secrets</div>
                             <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${secretsOnboardingOpenSections['properties'] ? 'rotate-90' : ''}`} />
@@ -2010,7 +2009,7 @@ const UnifiedAppModal = ({
                     </div>
 
                     {/* 8. Rotation - Ist-Status */}
-                    <div className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm print:border-0 print:shadow-none">
+                    <div className="bg-white rounded-lg border border-slate-200 shadow-sm print:border-0 print:shadow-none">
                         <button onClick={() => toggleSecretsOnboardingSection('rotation_status')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
                             <div className="flex items-center gap-3 font-bold text-slate-700"><RefreshCw className="w-5 h-5 text-indigo-500" /> 8. Rotation – Ist-Status</div>
                             <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${secretsOnboardingOpenSections['rotation_status'] ? 'rotate-90' : ''}`} />
@@ -2025,7 +2024,7 @@ const UnifiedAppModal = ({
                     </div>
 
                     {/* 9. Anbindungsvariante (Zielbild) */}
-                    <div className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm print:border-0 print:shadow-none">
+                    <div className="bg-white rounded-lg border border-slate-200 shadow-sm print:border-0 print:shadow-none">
                         <button onClick={() => toggleSecretsOnboardingSection('target_image')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
                             <div className="flex items-center gap-3 font-bold text-slate-700"><Link2 className="w-5 h-5 text-indigo-500" /> 9. Anbindungsvariante (Zielbild)</div>
                             <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${secretsOnboardingOpenSections['target_image'] ? 'rotate-90' : ''}`} />
