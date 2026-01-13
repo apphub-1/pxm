@@ -412,6 +412,65 @@ const MultiUserPicker = ({ label, value, onChange, tooltip, className, readOnly 
   );
 };
 
+const MultiSelectPicker = ({ value, onChange, options, readOnly }: any) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const wrapperRef = React.useRef<HTMLDivElement>(null);
+
+  const selectedValues = useMemo(() => {
+      return value ? value.split(';').map((s: string) => s.trim()).filter(Boolean) : [];
+  }, [value]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: any) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [wrapperRef]);
+
+  const toggleValue = (val: string) => {
+      let newValues;
+      if (selectedValues.includes(val)) {
+          newValues = selectedValues.filter((v: string) => v !== val);
+      } else {
+          newValues = [...selectedValues, val];
+      }
+      onChange(newValues.join('; '));
+  };
+
+  return (
+    <div className="relative w-full" ref={wrapperRef}>
+      <div 
+        className={`w-full p-2 bg-white border rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 min-h-[38px] flex flex-wrap gap-1 items-center cursor-pointer ${readOnly ? 'opacity-60 cursor-not-allowed' : ''} border-slate-200`}
+        onClick={() => !readOnly && setIsOpen(!isOpen)}
+      >
+        {selectedValues.length === 0 && <span className="text-slate-400 text-sm">Wählen...</span>}
+        {selectedValues.map((v: string) => (
+            <span key={v} className="bg-indigo-50 text-indigo-700 px-1.5 py-0.5 rounded text-xs font-bold border border-indigo-100">{v}</span>
+        ))}
+        <div className="ml-auto"><ChevronDown className="w-3 h-3 text-slate-400" /></div>
+      </div>
+      
+      {isOpen && (
+          <div className="absolute z-50 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-xl max-h-60 overflow-y-auto custom-scrollbar">
+              {options.map((opt: string) => (
+                  <div 
+                    key={opt} 
+                    className={`p-2 hover:bg-indigo-50 cursor-pointer border-b border-slate-50 last:border-0 text-sm flex items-center gap-2 ${selectedValues.includes(opt) ? 'bg-indigo-50/50 text-indigo-700 font-bold' : 'text-slate-700'}`}
+                    onClick={() => toggleValue(opt)}
+                  >
+                      {selectedValues.includes(opt) ? <CheckSquare className="w-4 h-4" /> : <Square className="w-4 h-4 text-slate-300" />}
+                      {opt}
+                  </div>
+              ))}
+          </div>
+      )}
+    </div>
+  );
+};
+
 const UnifiedAppModal = ({ 
   isOpen, 
   onClose, 
@@ -946,6 +1005,13 @@ const UnifiedAppModal = ({
                         <option value="">-</option>
                         {col.options?.map(o => <option key={o} value={o}>{o}</option>)}
                       </select>
+                    ) : col.type === 'multiselect' ? (
+                      <MultiSelectPicker 
+                        value={row[col.key]} 
+                        onChange={(val: string) => updateTechnicalRow(sectionId, idx, col.key, val)}
+                        options={col.options || []}
+                        readOnly={readOnly}
+                      />
                     ) : col.type === 'checkbox' ? (
                       <div className="flex justify-center">
                         <input 
@@ -1487,7 +1553,7 @@ const UnifiedAppModal = ({
                         {(technicalOpenSections['ports'] || typeof window !== 'undefined' && window.matchMedia('print').matches) && (
                             <div className="p-6 border-t border-slate-100">
                                 {renderTable('ports', [
-                                  { key: 'fromServer', label: 'Von Server', type: 'select', options: serverOptions },
+                                  { key: 'fromServer', label: 'Von Server', type: 'multiselect', options: ['psm1', 'psm2', 'psm3', 'psm4', 'psm5', 'psm6', 'psmp'], width: '200px' },
                                   { key: 'fromIp', label: 'Von IP' },
                                   { key: 'fromStage', label: 'Von Stage', type: 'select', options: ['Prod', 'Test', 'Dev'] },
                                   { key: 'toServer', label: 'Nach Server', type: 'select', options: serverOptions },
