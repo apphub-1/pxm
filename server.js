@@ -308,39 +308,39 @@ app.get('/api/directory/search', authenticateToken, async (req, res) => {
     const { q } = req.query;
     if (!q || String(q).length < 3) return res.json([]);
 
-    try {
-        let client;
+    const performSearch = async (retry = false) => {
         try {
-            client = await getAdClient();
-        } catch (e) {
-            console.error("[AD] Connection failed:", e);
-            return res.json([]);
+            const client = await getAdClient();
+            
+            // Optimierung: Prefix-Suche (Nutzt AD-Indizes) statt Wildcard am Anfang
+            const filter = `(&(objectClass=user)(|(sAMAccountName=${q}*)(displayName=${q}*)(mail=${q}*)))`;
+            
+            const { searchEntries } = await client.search(adConfig.baseDN, {
+                scope: 'sub',
+                filter,
+                attributes: ['sAMAccountName', 'displayName', 'mail', 'userPrincipalName'],
+                sizeLimit: 20 // Begrenzung der Ergebnisse für Performance
+            });
+            
+            return searchEntries.map(u => ({
+                username: u.sAMAccountName,
+                displayName: u.displayName,
+                email: u.mail,
+                upn: u.userPrincipalName
+            }));
+        } catch (err) {
+            console.error(`[AD SEARCH] Error (Attempt ${retry ? 2 : 1}):`, err.message);
+            adSearchClient = null; // Reset connection
+            
+            if (!retry) {
+                return await performSearch(true);
+            }
+            return [];
         }
-        
-        // Optimierung: Prefix-Suche (Nutzt AD-Indizes) statt Wildcard am Anfang
-        const filter = `(&(objectClass=user)(|(sAMAccountName=${q}*)(displayName=${q}*)(mail=${q}*)))`;
-        
-        const { searchEntries } = await client.search(adConfig.baseDN, {
-            scope: 'sub',
-            filter,
-            attributes: ['sAMAccountName', 'displayName', 'mail', 'userPrincipalName'],
-            sizeLimit: 20 // Begrenzung der Ergebnisse für Performance
-        });
-        
-        const users = searchEntries.map(u => ({
-            username: u.sAMAccountName,
-            displayName: u.displayName,
-            email: u.mail,
-            upn: u.userPrincipalName
-        }));
+    };
 
-        res.json(users);
-    } catch (err) {
-        console.error('[AD SEARCH] Error:', err.message);
-        // Force reconnect next time
-        adSearchClient = null;
-        res.json([]); 
-    }
+    const users = await performSearch();
+    res.json(users);
 });
 
 app.get('/api/onboarding/:id', authenticateToken, async (req, res) => {
@@ -602,13 +602,15 @@ app.get('/api/data', authenticateToken, async (req, res) => {
     try {
         const p = await getPool();
         let query = `SELECT * FROM [${TABLE_NAME}]`;
+        const request = p.request();
         
         if (req.user.role === 'maintenance') {
-            query += ` WHERE [Objektpflege] LIKE '%(${req.user.username})%'`;
+            query += ` WHERE [Objektpflege] LIKE @maintenanceUser`;
+            request.input('maintenanceUser', sql.NVarChar, `%(${req.user.username})%`);
         }
         
         query += ` ORDER BY id DESC`;
-        let result = await p.request().query(query);
+        let result = await request.query(query);
         res.json(result.recordset);
     } catch (err) {
         res.status(500).json({ error: err.message });
