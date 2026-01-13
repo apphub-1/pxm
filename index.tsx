@@ -48,6 +48,7 @@ import {
   FileSpreadsheet
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import './index.css';
 import '@fontsource/plus-jakarta-sans/400.css';
 import '@fontsource/plus-jakarta-sans/500.css';
@@ -1202,7 +1203,132 @@ const UnifiedAppModal = ({
     });
   };
 
-  const renderSecretsTable = (sectionId: string, columns: { key: string, label: string, type?: string, options?: string[], width?: string, required?: boolean }[]) => {
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>, sectionId: string, columns: any[]) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      try {
+          const buffer = await file.arrayBuffer();
+          const workbook = new ExcelJS.Workbook();
+          await workbook.xlsx.load(buffer);
+          
+          const worksheet = workbook.worksheets[0];
+          if (!worksheet) throw new Error("Kein Arbeitsblatt gefunden");
+
+          const jsonData: any[] = [];
+          const headers: string[] = [];
+
+          // Header lesen
+          worksheet.getRow(1).eachCell({ includeEmpty: true }, (cell, colNumber) => {
+              headers[colNumber] = cell.text ? cell.text.toString().trim() : '';
+          });
+
+          // Daten lesen
+          worksheet.eachRow((row, rowNumber) => {
+              if (rowNumber === 1) return;
+              
+              const rowData: any = {};
+              let hasData = false;
+              
+              row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+                  const header = headers[colNumber];
+                  if (header) {
+                      // cell.text ist sicherer für Import als cell.value (vermeidet Formel-Objekte etc.)
+                      const val = cell.text ? cell.text.toString().trim() : '';
+                      if (val) {
+                          rowData[header] = val;
+                          hasData = true;
+                      }
+                  }
+              });
+              
+              if (hasData) jsonData.push(rowData);
+          });
+
+          const mappedData = jsonData.map((row: any) => {
+              const newRow: any = {};
+              columns.forEach(col => {
+                  // Match by Label (preferred) or Key
+                  let val = row[col.label];
+                  if (val === undefined) val = row[col.key];
+                  
+                  // Case insensitive fallback
+                  if (val === undefined) {
+                      const keyMatch = Object.keys(row).find(k => k.toLowerCase() === col.label.toLowerCase() || k.toLowerCase() === col.key.toLowerCase());
+                      if (keyMatch) val = row[keyMatch];
+                  }
+
+                  if (val !== undefined) {
+                      newRow[col.key] = String(val);
+                  }
+              });
+              return newRow;
+          });
+
+          if (mappedData.length > 0) {
+            setSecretsData(prev => ({
+                ...prev,
+                [sectionId]: [...(prev[sectionId] || []), ...mappedData]
+            }));
+            alert(`${mappedData.length} Einträge erfolgreich importiert.`);
+          }
+      } catch (err) {
+          console.error(err);
+          alert("Fehler beim Importieren der Datei.");
+      } finally {
+          e.target.value = '';
+      }
+  };
+
+  const handleDownloadTemplate = async (columns: any[]) => {
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet('Template');
+
+      // Spalten definieren und Styling
+      worksheet.columns = columns.map(c => ({
+          header: c.label,
+          key: c.key,
+          width: c.width ? parseInt(c.width) / 7 : 25 // Pixel zu Excel-Breite (ungefähr)
+      }));
+
+      // Header Styling (Indigo Hintergrund, Weiße Schrift, Fett)
+      const headerRow = worksheet.getRow(1);
+      headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+      headerRow.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FF4F46E5' } // Indigo-600
+      };
+      headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
+      headerRow.height = 24;
+
+      // Dropdowns (Data Validation) hinzufügen
+      columns.forEach((col, index) => {
+          if (col.options && col.options.length > 0) {
+              const letter = worksheet.getColumn(index + 1).letter;
+              // Validierung für Zeilen 2 bis 1000
+              for (let i = 2; i <= 1000; i++) {
+                  worksheet.getCell(`${letter}${i}`).dataValidation = {
+                      type: 'list',
+                      allowBlank: true,
+                      formulae: [`"${col.options.join(',')}"`]
+                  };
+              }
+          }
+      });
+
+      // Datei schreiben und herunterladen
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = "Secret_Inventory_Template.xlsx";
+      a.click();
+      URL.revokeObjectURL(url);
+  };
+
+  const renderSecretsTable = (sectionId: string, columns: { key: string, label: string, type?: string, options?: string[], width?: string, required?: boolean }[], enableImport = false) => {
     const rows = secretsData[sectionId] || [];
     return (
       <div className="overflow-x-auto">
@@ -1272,9 +1398,22 @@ const UnifiedAppModal = ({
           </tbody>
         </table>
         {!readOnly && (
-        <button onClick={() => addSecretsRow(sectionId)} className="mt-3 flex items-center gap-2 text-sm font-bold text-indigo-600 hover:text-indigo-700 px-3 py-2 hover:bg-indigo-50 rounded-lg transition-colors">
-          <Plus className="w-4 h-4" /> Zeile hinzufügen
-        </button>
+        <div className="flex gap-2 mt-3">
+            <button onClick={() => addSecretsRow(sectionId)} className="flex items-center gap-2 text-sm font-bold text-indigo-600 hover:text-indigo-700 px-3 py-2 hover:bg-indigo-50 rounded-lg transition-colors">
+            <Plus className="w-4 h-4" /> Zeile hinzufügen
+            </button>
+            {enableImport && (
+                <>
+                    <button onClick={() => handleDownloadTemplate(columns)} className="flex items-center gap-2 text-sm font-bold text-slate-600 hover:text-slate-700 px-3 py-2 hover:bg-slate-50 rounded-lg transition-colors" title="Excel-Vorlage herunterladen">
+                        <FileDown className="w-4 h-4" /> Vorlage
+                    </button>
+                    <label className="flex items-center gap-2 text-sm font-bold text-emerald-600 hover:text-emerald-700 px-3 py-2 hover:bg-emerald-50 rounded-lg transition-colors cursor-pointer" title="Excel-Datei importieren">
+                        <FileSpreadsheet className="w-4 h-4" /> Import Excel
+                        <input type="file" accept=".xlsx, .xls, .csv" className="hidden" onChange={(e) => handleImport(e, sectionId, columns)} />
+                    </label>
+                </>
+            )}
+        </div>
         )}
       </div>
     );
@@ -1753,7 +1892,7 @@ const UnifiedAppModal = ({
                                   { key: 'rotationMech', label: 'Rotationsmechanismus', width: '200px' },
                                   { key: 'frequency', label: 'Häufigkeit', type: 'select', options: ['Täglich', 'Wöchentlich', 'Monatlich', 'Jährlich', 'bei Bedarf'], width: '150px' },
                                   { key: 'timeWindow', label: 'Zeitfenster', width: '150px' }
-                                ])}
+                                ], true)}
                             </div>
                         )}
                     </div>
@@ -2302,61 +2441,206 @@ const App = () => {
       const secData = secJson.data ? JSON.parse(secJson.data) : {};
       const secOnbData = secOnbJson.data ? JSON.parse(secOnbJson.data) : {};
 
-      const wb = XLSX.utils.book_new();
+      const workbook = new ExcelJS.Workbook();
+      workbook.creator = 'PXM Manager';
+      workbook.created = new Date();
 
-      // 1. Übersicht & Onboarding
-      const overviewData = [
-        { Bereich: "Stammdaten", Feld: "Anwendungsname", Wert: editingRow.Name },
-        { Bereich: "Stammdaten", Feld: "ICTO", Wert: editingRow.ICTO },
-        { Bereich: "Stammdaten", Feld: "Kritikalität", Wert: editingRow.Kritikalität },
-        { Bereich: "Stammdaten", Feld: "tAV", Wert: editingRow.tAV },
-        ...Object.entries(onbData).map(([k, v]) => ({ Bereich: "Onboarding", Feld: k, Wert: typeof v === 'boolean' ? (v ? 'Ja' : 'Nein') : v }))
-      ];
-      const wsOverview = XLSX.utils.json_to_sheet(overviewData);
-      wsOverview['!cols'] = [{ wch: 20 }, { wch: 40 }, { wch: 60 }]; // Spaltenbreiten anpassen
-      XLSX.utils.book_append_sheet(wb, wsOverview, "Status & Onboarding");
-
-      // 2. Technische Struktur
-      const wsTech = XLSX.utils.aoa_to_sheet([["Technische Struktur Produktion"]]);
-      let techRow = 2;
-      const appendTable = (ws: XLSX.WorkSheet, title: string, data: any[], startRow: number) => {
-          if (!data || data.length === 0) return startRow;
-          XLSX.utils.sheet_add_aoa(ws, [[title]], { origin: `A${startRow}` });
-          XLSX.utils.sheet_add_json(ws, data, { origin: `A${startRow + 1}` });
-          return startRow + data.length + 3; // +3 für Titel, Header und Abstand
+      // --- Styles ---
+      const headerFill: ExcelJS.Fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4F46E5' } }; // Indigo 600
+      const headerFont: ExcelJS.Font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 11 };
+      const sectionFont: ExcelJS.Font = { bold: true, size: 14, color: { argb: 'FF1E293B' } }; // Slate 800
+      const borderStyle: ExcelJS.Borders = {
+          top: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+          left: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+          bottom: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+          right: { style: 'thin', color: { argb: 'FFCBD5E1' } }
       };
-      wsTech['!cols'] = Array(10).fill({ wch: 25 }); // Standardbreite für Tabellen
 
-      techRow = appendTable(wsTech, "1. Server / Betriebssysteme", techData.servers, techRow);
-      techRow = appendTable(wsTech, "2. Datenbanken", techData.databases, techRow);
-      techRow = appendTable(wsTech, "3. Portfreischaltungen", techData.ports, techRow);
-      techRow = appendTable(wsTech, "4. Safes", techData.safes, techRow);
-      techRow = appendTable(wsTech, "5. Safe Mitglieder", techData.safeMembers, techRow);
-      techRow = appendTable(wsTech, "6. Shared Accounts", techData.sharedAccounts, techRow);
-      techRow = appendTable(wsTech, "7. Berechtigungen", techData.permissions, techRow);
-      techRow = appendTable(wsTech, "8. Mapping", techData.mapping, techRow);
+      // --- 1. Status & Onboarding ---
+      const wsOverview = workbook.addWorksheet("Status & Onboarding");
+      wsOverview.columns = [
+          { header: 'Bereich', key: 'area', width: 25 },
+          { header: 'Feld', key: 'field', width: 40 },
+          { header: 'Wert', key: 'value', width: 60 }
+      ];
       
-      XLSX.utils.book_append_sheet(wb, wsTech, "Technische Struktur");
+      const ovHeader = wsOverview.getRow(1);
+      ovHeader.font = headerFont;
+      ovHeader.fill = headerFill;
+      ovHeader.height = 24;
+      ovHeader.alignment = { vertical: 'middle' };
 
-      // 3. Secrets Management
-      const wsSecrets = XLSX.utils.aoa_to_sheet([["Secrets Management Inventar"]]);
-      wsSecrets['!cols'] = Array(10).fill({ wch: 25 });
-      let secRow = 2;
+      const overviewRows = [
+        { area: "Stammdaten", field: "Anwendungsname", value: editingRow.Name },
+        { area: "Stammdaten", field: "ICTO", value: editingRow.ICTO },
+        { area: "Stammdaten", field: "Kritikalität", value: editingRow.Kritikalität },
+        { area: "Stammdaten", field: "tAV", value: editingRow.tAV },
+        ...Object.entries(onbData).map(([k, v]) => ({ area: "Onboarding", field: k, value: typeof v === 'boolean' ? (v ? 'Ja' : 'Nein') : v }))
+      ];
+
+      overviewRows.forEach(r => {
+          const row = wsOverview.addRow(r);
+          row.getCell(1).font = { bold: true, color: { argb: 'FF475569' } };
+          row.eachCell(cell => { 
+              cell.border = borderStyle; 
+              cell.alignment = { vertical: 'top', wrapText: true }; 
+          });
+      });
+
+      // --- Helper for Tables ---
+      const addTableToSheet = (ws: ExcelJS.Worksheet, title: string, data: any[], columns: {key: string, label: string}[]) => {
+          // Add Title
+          const titleRow = ws.addRow([title]);
+          titleRow.font = sectionFont;
+          titleRow.height = 30;
+          titleRow.alignment = { vertical: 'bottom' };
+          
+          // Add Header
+          const headerRow = ws.addRow(columns.map(c => c.label));
+          headerRow.font = headerFont;
+          headerRow.fill = headerFill;
+          headerRow.height = 24;
+          headerRow.alignment = { vertical: 'middle' };
+          
+          // Add Data
+          if (data && data.length > 0) {
+              data.forEach(item => {
+                  const rowValues = columns.map(col => {
+                      const val = item[col.key];
+                      if (Array.isArray(val)) return val.join('; ');
+                      return typeof val === 'boolean' ? (val ? 'Ja' : 'Nein') : val;
+                  });
+                  const row = ws.addRow(rowValues);
+                  row.eachCell(cell => { 
+                      cell.border = borderStyle;
+                      cell.alignment = { vertical: 'top', wrapText: true };
+                  });
+              });
+          } else {
+              const row = ws.addRow(["Keine Einträge vorhanden"]);
+              row.getCell(1).font = { italic: true, color: { argb: 'FF94A3B8' } };
+              ws.mergeCells(row.number, 1, row.number, columns.length);
+              row.getCell(1).border = borderStyle;
+          }
+
+          // Add Spacing
+          ws.addRow([]);
+      };
+
+      // --- 2. Technische Struktur ---
+      const wsTech = workbook.addWorksheet("Technische Struktur");
       
-      secRow = appendTable(wsSecrets, "1. Secret Inventory", secData.inventory, secRow);
-      secRow = appendTable(wsSecrets, "2. Safe Struktur", secData.safes, secRow);
-      secRow = appendTable(wsSecrets, "3. Mitglieder", secData.members, secRow);
-      secRow = appendTable(wsSecrets, "4. Mapping", secData.mapping, secRow);
+      addTableToSheet(wsTech, "1. Server / Betriebssysteme", techData.servers, [
+          { key: 'serverName', label: 'Servername' }, { key: 'ip', label: 'IP-Adresse' }, { key: 'fqdn', label: 'Adresse / FQDN' }, 
+          { key: 'stage', label: 'Stage' }, { key: 'dmz', label: 'DMZ' }, { key: 'desc', label: 'Beschreibung' }, 
+          { key: 'os', label: 'Betriebssystem' }, { key: 'port', label: 'Zugriff Port' }, { key: 'expiry', label: 'Ablaufdatum' }
+      ]);
+      
+      addTableToSheet(wsTech, "2. Datenbanken / Server", techData.databases, [
+          { key: 'serverName', label: 'Servername' }, { key: 'ip', label: 'IP-Adresse' }, { key: 'fqdn', label: 'Adresse / FQDN' },
+          { key: 'stage', label: 'Stage' }, { key: 'dbType', label: 'Datenbanktyp' }, { key: 'instance', label: 'Instanz' },
+          { key: 'product', label: 'Produkt' }, { key: 'port', label: 'Zugriff Port' }
+      ]);
 
-      XLSX.utils.book_append_sheet(wb, wsSecrets, "Secrets Inventar");
+      addTableToSheet(wsTech, "3. Portfreischaltungen", techData.ports, [
+          { key: 'fromServer', label: 'Von Server' }, { key: 'fromStage', label: 'Von Stage' }, { key: 'toServer', label: 'Nach Server' }, 
+          { key: 'toIp', label: 'Nach IP' }, { key: 'toStage', label: 'Nach Stage' }, { key: 'port', label: 'Port/Protokoll' }, 
+          { key: 'provider', label: 'Dienstleister' }, { key: 'interfaceId', label: 'Schnittstellen-ID' }, { key: 'comment', label: 'Kommentar' }
+      ]);
 
-      // 4. Secrets Onboarding
-      const secOnbRows = Object.entries(secOnbData).map(([k, v]) => ({ Frage: k, Antwort: Array.isArray(v) ? v.join(', ') : v }));
-      const wsSecOnb = XLSX.utils.json_to_sheet(secOnbRows);
-      wsSecOnb['!cols'] = [{ wch: 50 }, { wch: 50 }];
-      XLSX.utils.book_append_sheet(wb, wsSecOnb, "Secrets Onboarding");
+      addTableToSheet(wsTech, "4. Safe-Struktur (CyberArk)", techData.safes, [
+          { key: 'userGroup', label: 'Nutzergruppe' }, { key: 'safeName', label: 'Safe Name (fachlich)' }, { key: 'safeDesc', label: 'Safe Beschreibung' }, 
+          { key: 'techSafeName', label: 'Technischer Safe Name' }, { key: 'adGroup', label: 'AD-Gruppe' }, { key: 'adGroupDesc', label: 'Beschreibung AD-Gruppe' }, 
+          { key: 'approver', label: 'Zweitgenehmiger' }, { key: 'sod', label: 'SoD-Hinweis' }
+      ]);
 
-      XLSX.writeFile(wb, `Gesamtexport_${editingRow.ICTO}.xlsx`);
+      addTableToSheet(wsTech, "5. Mitglieder der Safes", techData.safeMembers, [
+          { key: 'safeName', label: 'Safe Name' }, { key: 'adGroup', label: 'AD-Gruppe' }, { key: 'memberName', label: 'Name Mitglied' }, { key: 'identity', label: 'Primäre Identität' }
+      ]);
+
+      addTableToSheet(wsTech, "6. Shared Accounts", techData.sharedAccounts, [
+          { key: 'bizName', label: 'Fachlicher Name' }, { key: 'techName', label: 'Technischer Name' }, { key: 'sam', label: 'sAMAccountName' }, 
+          { key: 'login', label: 'Anmeldename' }, { key: 'desc', label: 'Beschreibung' }, { key: 'isAd', label: 'AD Account' }, 
+          { key: 'owner', label: 'Accountbesitzer' }, { key: 'ownerId', label: 'Identität Besitzer' }
+      ]);
+
+      addTableToSheet(wsTech, "7. Berechtigungszuordnungen", techData.permissions, [
+          { key: 'bizName', label: 'Fachlicher Account' }, { key: 'techName', label: 'Technischer Account' }, { key: 'roleId', label: 'Role ID' }, 
+          { key: 'roleName', label: 'Role Displayname' }, { key: 'roleDesc', label: 'Role Description' }, { key: 'bizSystem', label: 'Fachliches System' }, 
+          { key: 'bizSystemId', label: 'Fachliche System-ID' }
+      ]);
+
+      addTableToSheet(wsTech, "8. Shared Accounts zu Safe", techData.mapping, [
+          { key: 'techAccount', label: 'Technischer Account' }, { key: 'bizAccount', label: 'Fachlicher Account' }, 
+          { key: 'techSafe', label: 'Technischer Safe' }, { key: 'safeName', label: 'Fachlicher Safe' }
+      ]);
+
+      // Set generic width for tech sheet
+      for(let i=1; i<=10; i++) wsTech.getColumn(i).width = 25;
+
+
+      // --- 3. Secrets Inventar ---
+      const wsSecrets = workbook.addWorksheet("Secrets Inventar");
+      
+      addTableToSheet(wsSecrets, "1. Secret Inventory", secData.inventory, [
+          { key: 'category', label: 'Kategorie' }, { key: 'name', label: 'Name / ID' }, { key: 'owner', label: 'Secret Owner' },
+          { key: 'holder', label: 'Secret Holder' }, { key: 'layer', label: 'Layer' }, { key: 'localOrAd', label: 'Lokal/AD' },
+          { key: 'stage', label: 'Stage' }, { key: 'complexity', label: 'Komplexität' }, { key: 'autoRotation', label: 'Auto Rotation' },
+          { key: 'rotationMech', label: 'Mechanismus' }, { key: 'frequency', label: 'Häufigkeit' }, { key: 'timeWindow', label: 'Zeitfenster' }
+      ]);
+
+      addTableToSheet(wsSecrets, "2. Safe- / Pfad-Struktur", secData.safes, [
+          { key: 'userGroup', label: 'Nutzergruppe' }, { key: 'safeName', label: 'Safe Name' }, { key: 'safeDesc', label: 'Beschreibung' },
+          { key: 'techSafeName', label: 'Tech. Safe Name' }, { key: 'adGroup', label: 'AD-Gruppe' }, { key: 'adGroupDesc', label: 'Beschreibung AD' },
+          { key: 'approver', label: 'Zweitgenehmiger' }, { key: 'sod', label: 'SoD' }
+      ]);
+
+      addTableToSheet(wsSecrets, "3. Mitglieder der Safes", secData.members, [
+          { key: 'safeName', label: 'Safe Name' }, { key: 'adGroup', label: 'AD-Gruppe' }, { key: 'memberName', label: 'Name Mitglied' }, { key: 'identity', label: 'Identität' }
+      ]);
+
+      addTableToSheet(wsSecrets, "4. Secrets zu Safe", secData.mapping, [
+          { key: 'bizSecret', label: 'Fachl. Secret' }, { key: 'techSecret', label: 'Tech. Secret' }, 
+          { key: 'safeName', label: 'Safe Name' }, { key: 'techSafe', label: 'Tech. Safe' }
+      ]);
+
+      for(let i=1; i<=12; i++) wsSecrets.getColumn(i).width = 20;
+
+
+      // --- 4. Secrets Onboarding ---
+      const wsSecOnb = workbook.addWorksheet("Secrets Onboarding");
+      wsSecOnb.columns = [
+          { header: 'Frage', key: 'question', width: 60 },
+          { header: 'Antwort', key: 'answer', width: 60 }
+      ];
+      const secOnbHeader = wsSecOnb.getRow(1);
+      secOnbHeader.font = headerFont;
+      secOnbHeader.fill = headerFill;
+      secOnbHeader.height = 24;
+      secOnbHeader.alignment = { vertical: 'middle' };
+
+      Object.entries(secOnbData).forEach(([k, v]) => {
+          const row = wsSecOnb.addRow({ 
+              question: k, 
+              answer: Array.isArray(v) ? v.join(', ') : (typeof v === 'boolean' ? (v ? 'Ja' : 'Nein') : v) 
+          });
+          row.eachCell(cell => { 
+              cell.border = borderStyle; 
+              cell.alignment = { vertical: 'top', wrapText: true }; 
+          });
+      });
+
+
+      // --- Download ---
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Gesamtexport_${editingRow.ICTO}.xlsx`;
+      a.click();
+      URL.revokeObjectURL(url);
+
     } catch (e) {
       console.error(e);
       alert("Fehler beim Erstellen des Excel-Exports.");
