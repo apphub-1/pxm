@@ -148,6 +148,7 @@ const ONBOARDING_SECTIONS = [
   { id: 'test', title: '5. Testuser und Testumgebung', icon: <FileCheck className="w-5 h-5" /> },
   { id: 'emergency', title: '6. Notfallprozess', icon: <AlertTriangle className="w-5 h-5" /> },
   { id: 'matrix', title: '7. Vereinbarte Anbindungsvariante', icon: <Link2 className="w-5 h-5" /> },
+  { id: 'bypass', title: '8. PAM-Bypass Regeln', icon: <Shield className="w-5 h-5" /> },
 ];
 
 const TECHNICAL_SECTIONS = [
@@ -1668,6 +1669,19 @@ const UnifiedAppModal = ({
                         )}
                     </div>
 
+                    {/* Section 8: Bypass */}
+                    <div className="bg-white rounded-lg border border-slate-200 shadow-sm print:border-0 print:shadow-none">
+                        <button onClick={() => toggleOnboardingSection('bypass')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
+                            <div className="flex items-center gap-3 font-bold text-slate-700"><Shield className="w-5 h-5 text-rose-500" /> 8. PAM-Bypass Regeln</div>
+                            <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${onboardingOpenSections['bypass'] ? 'rotate-90' : ''}`} />
+                        </button>
+                        {(onboardingOpenSections['bypass'] || typeof window !== 'undefined' && window.matchMedia('print').matches) && (
+                            <div className="p-6 border-t border-slate-100 space-y-4">
+                                {renderInput("S-Base Pro Auftrag", "sBaseProOrder")}
+                            </div>
+                        )}
+                    </div>
+
                 </div>
                 )
             )) : activeTab === 'technical' ? (
@@ -2219,7 +2233,7 @@ const App = () => {
     } else {
         setOnboardingVariant('');
     }
-  }, [isModalOpen, editingRow]);
+  }, [isModalOpen, editingRow?.id]);
 
   const checkConnectivity = async () => {
     setLoading(true);
@@ -2809,7 +2823,7 @@ const App = () => {
             connectionState === 'online' ? 'bg-indigo-600 shadow-indigo-200' : 
             connectionState === 'api_only' ? 'bg-amber-500 shadow-amber-200' : 'bg-rose-500 shadow-rose-200'
           }`}>
-            <Database className={`w-6 h-6 ${connectionState === 'online' ? 'animate-pulse' : ''}`} />
+            <Database className="w-6 h-6" />
           </div>
           <div>
             <h1 className="text-2xl font-black tracking-[-0.03em] leading-none mb-1 text-slate-900">PXM Manager</h1>
@@ -2994,7 +3008,7 @@ const App = () => {
                   {editingRow?.id ? 'Status Onboarding' : 'Neue Erfassung'}
                 </h2>
                 <div className="flex items-center gap-2 mt-1.5">
-                   <div className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></div>
+                   <div className="w-2 h-2 rounded-full bg-indigo-500"></div>
                    <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em]">PAM Governance Framework</p>
                 </div>
               </div>
