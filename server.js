@@ -5,6 +5,7 @@ import sql from 'mssql';
 import cors from 'cors';
 import { Client } from 'ldapts';
 import jwt from 'jsonwebtoken';
+import dns from 'dns';
 
 process.on('unhandledRejection', (reason, p) => {
   console.error('Unhandled Rejection at:', p, 'reason:', reason);
@@ -303,6 +304,16 @@ async function getAdClient() {
     adSearchClient = client;
     return adSearchClient;
 }
+
+app.get('/api/dns/resolve', authenticateToken, (req, res) => {
+    const { hostname } = req.query;
+    if (!hostname) return res.json({ address: '' });
+
+    dns.lookup(hostname, (err, address) => {
+        if (err) return res.json({ address: '' });
+        res.json({ address });
+    });
+});
 
 app.get('/api/directory/search', authenticateToken, async (req, res) => {
     const { q } = req.query;

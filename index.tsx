@@ -45,7 +45,9 @@ import {
   KeyRound,
   ClipboardList,
   Cloud,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Moon,
+  Sun
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import ExcelJS from 'exceljs';
@@ -256,7 +258,7 @@ const UserPicker = ({ label, value, onChange, tooltip, className, readOnly }: an
       <div className="relative">
         <input 
             type="text" 
-            className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-medium pr-10"
+            className="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-medium pr-10 dark:text-slate-200"
             value={query}
             onChange={e => handleSearch(e.target.value)}
             onFocus={() => query.length >= 3 && setIsOpen(true)}
@@ -270,15 +272,15 @@ const UserPicker = ({ label, value, onChange, tooltip, className, readOnly }: an
       </div>
       
       {isOpen && results.length > 0 && (
-          <div className="absolute z-50 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-xl max-h-60 overflow-y-auto custom-scrollbar">
+          <div className="absolute z-50 left-0 right-0 mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl max-h-60 overflow-y-auto custom-scrollbar">
               {results.map((u: any) => (
                   <div 
                     key={u.username} 
-                    className="p-3 hover:bg-indigo-50 cursor-pointer border-b border-slate-50 last:border-0"
+                    className="p-3 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 cursor-pointer border-b border-slate-50 dark:border-slate-700 last:border-0"
                     onClick={() => selectUser(u)}
                   >
-                      <div className="font-bold text-sm text-slate-800">{u.displayName}</div>
-                      <div className="text-xs text-slate-500 flex gap-2">
+                      <div className="font-bold text-sm text-slate-800 dark:text-slate-200">{u.displayName}</div>
+                      <div className="text-xs text-slate-500 dark:text-slate-400 flex gap-2">
                           <span>{u.username}</span>
                           {u.email && <span>• {u.email}</span>}
                       </div>
@@ -372,7 +374,7 @@ const MultiUserPicker = ({ label, value, onChange, tooltip, className, readOnly 
       
       <div className="flex flex-wrap gap-2 mb-2">
           {selectedUsers.map((u: string) => (
-              <div key={u} className="bg-indigo-50 text-indigo-700 px-2 py-1 rounded-md text-xs font-bold flex items-center gap-1 border border-indigo-100">
+              <div key={u} className="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 px-2 py-1 rounded-md text-xs font-bold flex items-center gap-1 border border-indigo-100 dark:border-indigo-800">
                   {u}
                   {!readOnly && <button onClick={() => removeUser(u)} className="hover:text-indigo-900"><X className="w-3 h-3" /></button>}
               </div>
@@ -382,7 +384,7 @@ const MultiUserPicker = ({ label, value, onChange, tooltip, className, readOnly 
       <div className="relative">
         <input 
             type="text" 
-            className={`w-full p-2.5 bg-slate-50 border border-slate-200 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-medium pr-10 ${readOnly ? 'cursor-not-allowed opacity-60' : ''}`}
+            className={`w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-medium pr-10 dark:text-slate-200 ${readOnly ? 'cursor-not-allowed opacity-60' : ''}`}
             value={query}
             onChange={e => handleSearch(e.target.value)}
             onFocus={() => !readOnly && query.length >= 3 && setIsOpen(true)}
@@ -396,15 +398,15 @@ const MultiUserPicker = ({ label, value, onChange, tooltip, className, readOnly 
       </div>
       
       {isOpen && results.length > 0 && (
-          <div className="absolute z-50 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-xl max-h-60 overflow-y-auto custom-scrollbar">
+          <div className="absolute z-50 left-0 right-0 mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl max-h-60 overflow-y-auto custom-scrollbar">
               {results.map((u: any) => (
                   <div 
                     key={u.username} 
-                    className="p-3 hover:bg-indigo-50 cursor-pointer border-b border-slate-50 last:border-0"
+                    className="p-3 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 cursor-pointer border-b border-slate-50 dark:border-slate-700 last:border-0"
                     onClick={() => addUser(u)}
                   >
-                      <div className="font-bold text-sm text-slate-800">{u.displayName}</div>
-                      <div className="text-xs text-slate-500 flex gap-2">
+                      <div className="font-bold text-sm text-slate-800 dark:text-slate-200">{u.displayName}</div>
+                      <div className="text-xs text-slate-500 dark:text-slate-400 flex gap-2">
                           <span>{u.username}</span>
                           {u.email && <span>• {u.email}</span>}
                       </div>
@@ -447,22 +449,22 @@ const MultiSelectPicker = ({ value, onChange, options, readOnly }: any) => {
   return (
     <div className="relative w-full" ref={wrapperRef}>
       <div 
-        className={`w-full p-2 bg-white border rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 min-h-[38px] flex flex-wrap gap-1 items-center cursor-pointer transition-all duration-200 ease-in-out ${readOnly ? 'opacity-60 cursor-not-allowed' : ''} border-slate-200`}
+        className={`w-full p-2 bg-white dark:bg-slate-800 border rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 min-h-[38px] flex flex-wrap gap-1 items-center cursor-pointer transition-all duration-200 ease-in-out ${readOnly ? 'opacity-60 cursor-not-allowed' : ''} border-slate-200 dark:border-slate-700`}
         onClick={() => !readOnly && setIsOpen(!isOpen)}
       >
         {selectedValues.length === 0 && <span className="text-slate-400 text-sm">Wählen...</span>}
         {selectedValues.map((v: string) => (
-            <span key={v} className="bg-indigo-50 text-indigo-700 px-1.5 py-0.5 rounded text-xs font-bold border border-indigo-100">{v}</span>
+            <span key={v} className="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 px-1.5 py-0.5 rounded text-xs font-bold border border-indigo-100 dark:border-indigo-800">{v}</span>
         ))}
         <div className="ml-auto"><ChevronDown className="w-3 h-3 text-slate-400" /></div>
       </div>
       
       {isOpen && (
-          <div className="mt-1 bg-white border border-slate-200 rounded-lg shadow-sm max-h-60 overflow-y-auto custom-scrollbar">
+          <div className="mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-sm max-h-60 overflow-y-auto custom-scrollbar z-50 absolute w-full">
               {options.map((opt: string) => (
                   <div 
                     key={opt} 
-                    className={`p-2 hover:bg-indigo-50 cursor-pointer border-b border-slate-50 last:border-0 text-sm flex items-center gap-2 ${selectedValues.includes(opt) ? 'bg-indigo-50/50 text-indigo-700 font-bold' : 'text-slate-700'}`}
+                    className={`p-2 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 cursor-pointer border-b border-slate-50 dark:border-slate-700 last:border-0 text-sm flex items-center gap-2 ${selectedValues.includes(opt) ? 'bg-indigo-50/50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 font-bold' : 'text-slate-700 dark:text-slate-300'}`}
                     onClick={() => toggleValue(opt)}
                   >
                       {selectedValues.includes(opt) ? <CheckSquare className="w-4 h-4" /> : <Square className="w-4 h-4 text-slate-300" />}
@@ -475,7 +477,7 @@ const MultiSelectPicker = ({ value, onChange, options, readOnly }: any) => {
   );
 };
 
-const PaginatedHistoryList = ({ history, cardClassName = "bg-white p-5 rounded-lg border border-slate-100 shadow-sm" }: { history: any[], cardClassName?: string }) => {
+const PaginatedHistoryList = ({ history, cardClassName = "bg-white dark:bg-slate-800 p-5 rounded-lg border border-slate-100 dark:border-slate-700 shadow-sm" }: { history: any[], cardClassName?: string }) => {
   const [page, setPage] = useState(1);
   const pageSize = 10;
   
@@ -492,19 +494,19 @@ const PaginatedHistoryList = ({ history, cardClassName = "bg-white p-5 rounded-l
 
   return (
     <div>
-        <div className="space-y-4 relative before:absolute before:left-[19px] before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-100">
+        <div className="space-y-4 relative before:absolute before:left-[19px] before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-100 dark:before:bg-slate-700">
             {paginatedHistory.map((entry: any) => (
                 <div key={entry.id} className="relative pl-10">
-                    <div className="absolute left-0 top-1.5 w-[40px] h-[40px] bg-white border-4 border-slate-50 rounded-full flex items-center justify-center z-10">
+                    <div className="absolute left-0 top-1.5 w-[40px] h-[40px] bg-white dark:bg-slate-800 border-4 border-slate-50 dark:border-slate-900 rounded-full flex items-center justify-center z-10">
                         <div className={`w-3 h-3 rounded-full ${entry.action === 'ERSTELLT' ? 'bg-emerald-400' : 'bg-indigo-400'}`}></div>
                     </div>
                     <div className={cardClassName}>
                         <div className="flex justify-between items-start mb-2">
                             <div>
-                                <span className="block font-bold text-slate-800">{entry.username}</span>
+                                <span className="block font-bold text-slate-800 dark:text-slate-200">{entry.username}</span>
                                 <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{entry.action}</span>
                             </div>
-                            <span className="text-xs font-mono text-slate-400 bg-slate-50 px-2 py-1 rounded-md border border-slate-100">
+                            <span className="text-xs font-mono text-slate-400 bg-slate-50 dark:bg-slate-900 px-2 py-1 rounded-md border border-slate-100 dark:border-slate-700">
                                 {new Date(entry.timestamp).toLocaleString()}
                             </span>
                         </div>
@@ -513,13 +515,13 @@ const PaginatedHistoryList = ({ history, cardClassName = "bg-white p-5 rounded-l
                                 const details = JSON.parse(entry.details);
                                 if (Array.isArray(details)) {
                                     return (
-                                        <div className="mt-3 space-y-1 border-t border-slate-100 pt-3">
+                                        <div className="mt-3 space-y-1 border-t border-slate-100 dark:border-slate-700 pt-3">
                                             {details.map((change: any, i: number) => (
-                                                <div key={i} className="text-xs flex flex-wrap items-center gap-x-2 gap-y-1 text-slate-600">
-                                                    <span className="font-bold bg-slate-50 px-1.5 py-0.5 rounded-sm border border-slate-200 text-slate-700">{change.field}</span>
+                                                <div key={i} className="text-xs flex flex-wrap items-center gap-x-2 gap-y-1 text-slate-600 dark:text-slate-400">
+                                                    <span className="font-bold bg-slate-50 dark:bg-slate-900 px-1.5 py-0.5 rounded-sm border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300">{change.field}</span>
                                                     <span className="line-through opacity-50 decoration-rose-400/50">{change.old || <span className="italic text-[10px]">leer</span>}</span>
                                                     <span className="text-slate-300">➜</span>
-                                                    <span className="font-bold text-indigo-600">{change.new || <span className="italic text-[10px]">leer</span>}</span>
+                                                    <span className="font-bold text-indigo-600 dark:text-indigo-400">{change.new || <span className="italic text-[10px]">leer</span>}</span>
                                                 </div>
                                             ))}
                                         </div>
@@ -534,11 +536,11 @@ const PaginatedHistoryList = ({ history, cardClassName = "bg-white p-5 rounded-l
         </div>
         {totalPages > 1 && (
             <div className="flex justify-center items-center gap-4 mt-8 pl-10">
-                <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-4 py-2 rounded-lg border border-slate-200 bg-white text-slate-600 font-bold text-xs disabled:opacity-50 hover:bg-slate-50 transition-colors">
+                <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold text-xs disabled:opacity-50 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
                     Neuere
                 </button>
                 <span className="text-xs font-bold text-slate-400">Seite {page} von {totalPages}</span>
-                <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="px-4 py-2 rounded-lg border border-slate-200 bg-white text-slate-600 font-bold text-xs disabled:opacity-50 hover:bg-slate-50 transition-colors">
+                <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold text-xs disabled:opacity-50 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
                     Ältere
                 </button>
             </div>
@@ -572,7 +574,7 @@ const UnifiedAppModal = ({
     ONBOARDING_SECTIONS.reduce((acc, s) => ({ ...acc, [s.id]: true }), {})
   );
   const [onboardingLoading, setOnboardingLoading] = useState(false);
-  const [onboardingSaving, setOnboardingSaving] = useState(false);
+  const [onboardingSaveStatus, setOnboardingSaveStatus] = useState<'idle' | 'saving' | 'success'>('idle');
   const [onboardingViewMode, setOnboardingViewMode] = useState<'form' | 'history'>('form');
   const [onboardingHistory, setOnboardingHistory] = useState<any[]>([]);
   const [onboardingLoaded, setOnboardingLoaded] = useState(false);
@@ -585,7 +587,7 @@ const UnifiedAppModal = ({
     TECHNICAL_SECTIONS.reduce((acc, s) => ({ ...acc, [s.id]: true }), {})
   );
   const [technicalLoading, setTechnicalLoading] = useState(false);
-  const [technicalSaving, setTechnicalSaving] = useState(false);
+  const [technicalSaveStatus, setTechnicalSaveStatus] = useState<'idle' | 'saving' | 'success'>('idle');
   const [technicalViewMode, setTechnicalViewMode] = useState<'form' | 'history'>('form');
   const [technicalHistory, setTechnicalHistory] = useState<any[]>([]);
   const [technicalLoaded, setTechnicalLoaded] = useState(false);
@@ -598,7 +600,7 @@ const UnifiedAppModal = ({
     SECRETS_SECTIONS.reduce((acc, s) => ({ ...acc, [s.id]: true }), {})
   );
   const [secretsLoading, setSecretsLoading] = useState(false);
-  const [secretsSaving, setSecretsSaving] = useState(false);
+  const [secretsSaveStatus, setSecretsSaveStatus] = useState<'idle' | 'saving' | 'success'>('idle');
   const [secretsViewMode, setSecretsViewMode] = useState<'form' | 'history'>('form');
   const [secretsHistory, setSecretsHistory] = useState<any[]>([]);
   const [secretsLoaded, setSecretsLoaded] = useState(false);
@@ -609,7 +611,7 @@ const UnifiedAppModal = ({
     SECRETS_ONBOARDING_SECTIONS.reduce((acc, s) => ({ ...acc, [s.id]: true }), {})
   );
   const [secretsOnboardingLoading, setSecretsOnboardingLoading] = useState(false);
-  const [secretsOnboardingSaving, setSecretsOnboardingSaving] = useState(false);
+  const [secretsOnboardingSaveStatus, setSecretsOnboardingSaveStatus] = useState<'idle' | 'saving' | 'success'>('idle');
   const [secretsOnboardingViewMode, setSecretsOnboardingViewMode] = useState<'form' | 'history'>('form');
   const [secretsOnboardingHistory, setSecretsOnboardingHistory] = useState<any[]>([]);
   const [secretsOnboardingLoaded, setSecretsOnboardingLoaded] = useState(false);
@@ -765,7 +767,7 @@ const UnifiedAppModal = ({
 
   const handleOnboardingSave = async () => {
     if (saveLock.current) return;
-    setOnboardingSaving(true);
+    setOnboardingSaveStatus('saving');
     saveLock.current = true;
     try {
       const token = getAccessToken();
@@ -777,18 +779,19 @@ const UnifiedAppModal = ({
         headers,
         body: JSON.stringify(onboardingData)
       });
-      alert("Onboarding Daten gespeichert.");
+      setOnboardingSaveStatus('success');
+      setTimeout(() => setOnboardingSaveStatus('idle'), 2000);
     } catch (e) {
       alert("Fehler beim Speichern.");
+      setOnboardingSaveStatus('idle');
     } finally {
-      setOnboardingSaving(false);
       saveLock.current = false;
     }
   };
 
   const handleTechnicalSave = async () => {
     if (saveLock.current) return;
-    setTechnicalSaving(true);
+    setTechnicalSaveStatus('saving');
     saveLock.current = true;
     try {
       const token = getAccessToken();
@@ -800,18 +803,19 @@ const UnifiedAppModal = ({
         headers,
         body: JSON.stringify(technicalData)
       });
-      alert("Technische Struktur gespeichert.");
+      setTechnicalSaveStatus('success');
+      setTimeout(() => setTechnicalSaveStatus('idle'), 2000);
     } catch (e) {
       alert("Fehler beim Speichern.");
+      setTechnicalSaveStatus('idle');
     } finally {
-      setTechnicalSaving(false);
       saveLock.current = false;
     }
   };
 
   const handleSecretsSave = async () => {
     if (saveLock.current) return;
-    setSecretsSaving(true);
+    setSecretsSaveStatus('saving');
     saveLock.current = true;
     try {
       const token = getAccessToken();
@@ -823,18 +827,19 @@ const UnifiedAppModal = ({
         headers,
         body: JSON.stringify(secretsData)
       });
-      alert("Secrets Management gespeichert.");
+      setSecretsSaveStatus('success');
+      setTimeout(() => setSecretsSaveStatus('idle'), 2000);
     } catch (e) {
       alert("Fehler beim Speichern.");
+      setSecretsSaveStatus('idle');
     } finally {
-      setSecretsSaving(false);
       saveLock.current = false;
     }
   };
 
   const handleSecretsOnboardingSave = async () => {
     if (saveLock.current) return;
-    setSecretsOnboardingSaving(true);
+    setSecretsOnboardingSaveStatus('saving');
     saveLock.current = true;
     try {
       const token = getAccessToken();
@@ -846,11 +851,12 @@ const UnifiedAppModal = ({
         headers,
         body: JSON.stringify(secretsOnboardingData)
       });
-      alert("Onboarding Secrets Management gespeichert.");
+      setSecretsOnboardingSaveStatus('success');
+      setTimeout(() => setSecretsOnboardingSaveStatus('idle'), 2000);
     } catch (e) {
       alert("Fehler beim Speichern.");
+      setSecretsOnboardingSaveStatus('idle');
     } finally {
-      setSecretsOnboardingSaving(false);
       saveLock.current = false;
     }
   };
@@ -939,7 +945,7 @@ const UnifiedAppModal = ({
       </label>
       {options ? (
         <select 
-            className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-medium"
+            className="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-medium dark:text-slate-200"
             value={onboardingData[field] || ''}
             onChange={e => updateField(field, e.target.value)}
             disabled={readOnly}
@@ -950,7 +956,7 @@ const UnifiedAppModal = ({
       ) : (
         <input 
             type={type} 
-            className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-medium"
+            className="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-medium dark:text-slate-200"
             value={onboardingData[field] || ''}
             onChange={e => updateField(field, e.target.value)}
             disabled={readOnly}
@@ -963,7 +969,7 @@ const UnifiedAppModal = ({
   const renderCheckbox = (label: string, field: string) => (
       <div className={`mb-4 flex items-center gap-3 ${readOnly ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`} onClick={() => !readOnly && updateField(field, !onboardingData[field])}>
           {onboardingData[field] ? <CheckSquare className="w-5 h-5 text-indigo-600" /> : <Square className="w-5 h-5 text-slate-300" />}
-          <span className="text-sm font-medium text-slate-700">{label}</span>
+          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{label}</span>
       </div>
   );
 
@@ -981,6 +987,46 @@ const UnifiedAppModal = ({
     setSecretsOnboardingData(prev => ({ ...prev, [field]: value }));
   };
 
+  const updateServerRegistry = (index: number, field: string, value: any) => {
+      setSecretsOnboardingData(prev => {
+          const list = [...(prev.serverRegistry || [])];
+          list[index] = { ...list[index], [field]: value };
+          return { ...prev, serverRegistry: list };
+      });
+  };
+
+  const addServerRegistryRow = () => {
+      setSecretsOnboardingData(prev => ({
+          ...prev,
+          serverRegistry: [...(prev.serverRegistry || []), { segment: 'Produktion' }]
+      }));
+  };
+
+  const removeServerRegistryRow = (index: number) => {
+      setSecretsOnboardingData(prev => {
+          const list = [...(prev.serverRegistry || [])];
+          list.splice(index, 1);
+          return { ...prev, serverRegistry: list };
+      });
+  };
+
+  const resolveHostname = async (index: number, hostname: string) => {
+      if (!hostname) return;
+      try {
+          const token = getAccessToken();
+          const headers: HeadersInit = token ? { 'Authorization': `Bearer ${token}` } : {};
+          const res = await fetch(`${API_BASE_URL}/dns/resolve?hostname=${encodeURIComponent(hostname)}`, { headers });
+          if (res.ok) {
+              const { address } = await res.json();
+              if (address) {
+                  updateServerRegistry(index, 'ip', address);
+              }
+          }
+      } catch (e) {
+          console.error(e);
+      }
+  };
+
   const renderSecretsOnboardingInput = (label: string, field: string, type = 'text', tooltip?: string, options?: string[]) => (
     <div className="mb-4">
       <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1 flex items-center gap-2">
@@ -989,7 +1035,7 @@ const UnifiedAppModal = ({
       </label>
       {options ? (
         <select 
-            className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-medium"
+            className="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-medium dark:text-slate-200"
             value={secretsOnboardingData[field] || ''}
             onChange={e => updateSecretsOnboardingField(field, e.target.value)}
             disabled={readOnly}
@@ -1000,7 +1046,7 @@ const UnifiedAppModal = ({
       ) : (
         <input 
             type={type} 
-            className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-medium"
+            className="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-medium dark:text-slate-200"
             value={secretsOnboardingData[field] || ''}
             onChange={e => updateSecretsOnboardingField(field, e.target.value)}
             disabled={readOnly}
@@ -1024,9 +1070,9 @@ const UnifiedAppModal = ({
               <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">{label}</label>
               <div className="space-y-2">
                   {options.map(opt => (
-                      <div key={opt} className={`flex items-center gap-2 p-1 rounded ${readOnly ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer hover:bg-slate-50'}`} onClick={() => !readOnly && toggleValue(opt)}>
+                      <div key={opt} className={`flex items-center gap-2 p-1 rounded ${readOnly ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800'}`} onClick={() => !readOnly && toggleValue(opt)}>
                           {currentValues.includes(opt) ? <CheckSquare className="w-4 h-4 text-indigo-600" /> : <Square className="w-4 h-4 text-slate-300" />}
-                          <span className="text-sm text-slate-700">{opt}</span>
+                          <span className="text-sm text-slate-700 dark:text-slate-300">{opt}</span>
                       </div>
                   ))}
               </div>
@@ -1044,20 +1090,20 @@ const UnifiedAppModal = ({
               <table className="w-full border-collapse text-sm">
                   <thead>
                       <tr>
-                          <th className="p-3 border border-slate-200 bg-slate-50 text-left">Kritikalität</th>
-                          {variants.map(v => <th key={v} className={`p-3 border border-slate-200 bg-slate-50 ${v.includes('3') ? 'bg-indigo-50 text-indigo-700' : ''}`}>{v}</th>)}
+                          <th className="p-3 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-left dark:text-slate-300">Kritikalität</th>
+                          {variants.map(v => <th key={v} className={`p-3 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 dark:text-slate-300 ${v.includes('3') ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300' : ''}`}>{v}</th>)}
                       </tr>
                   </thead>
                   <tbody>
                       {criticalities.map(crit => (
                           <tr key={crit}>
-                              <td className="p-3 border border-slate-200 font-bold text-slate-600">{crit}</td>
+                              <td className="p-3 border border-slate-200 dark:border-slate-700 font-bold text-slate-600 dark:text-slate-300">{crit}</td>
                               {variants.map(v => {
                                   const isSelected = onboardingData.selectedVariant === v && currentCriticality === crit;
                                   return (
                                       <td 
                                         key={v} 
-                                        className={`p-3 border border-slate-200 text-center transition-colors ${isSelected ? 'bg-emerald-50 ring-2 ring-inset ring-emerald-500' : (currentCriticality === crit ? 'bg-slate-50' : '')} ${readOnly ? 'pointer-events-none' : ''}`}
+                                        className={`p-3 border border-slate-200 dark:border-slate-700 text-center transition-colors ${isSelected ? 'bg-emerald-50 dark:bg-emerald-900/20 ring-2 ring-inset ring-emerald-500' : (currentCriticality === crit ? 'bg-slate-50 dark:bg-slate-800' : '')} ${readOnly ? 'pointer-events-none' : ''}`}
                                       >
                                           {isSelected && <CheckCircle className="w-5 h-5 text-emerald-500 mx-auto" />}
                                       </td>
@@ -1067,9 +1113,9 @@ const UnifiedAppModal = ({
                       ))}
                   </tbody>
               </table>
-              <div className="mt-4 p-4 bg-indigo-50 rounded-xl border border-indigo-100">
-                  <p className="text-sm font-bold text-indigo-900">Ausgewählte Konfiguration:</p>
-                  <p className="text-indigo-700">
+              <div className="mt-4 p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl border border-indigo-100 dark:border-indigo-800">
+                  <p className="text-sm font-bold text-indigo-900 dark:text-indigo-300">Ausgewählte Konfiguration:</p>
+                  <p className="text-indigo-700 dark:text-indigo-400">
                     {currentCriticality ? `Kritikalität: ${currentCriticality}` : 'Keine Kritikalität gewählt'} 
                     {' ➜ '} 
                     {onboardingData.selectedVariant || 'Bitte Konfiguration wählen'}
@@ -1099,15 +1145,15 @@ const UnifiedAppModal = ({
     });
   };
 
-  const renderTable = (sectionId: string, columns: { key: string, label: string, type?: string, options?: string[], width?: string, required?: boolean, readOnly?: boolean }[]) => {
+  const renderTable = (sectionId: string, columns: { key: string, label: string, type?: string, options?: string[], width?: string, required?: boolean, readOnly?: boolean }[], enableImport = false) => {
     const rows = technicalData[sectionId] || [];
     return (
       <div className="overflow-x-auto">
         <table className="w-full text-sm border-collapse">
           <thead>
-            <tr className="bg-slate-50 border-b border-slate-200">
+            <tr className="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
               {columns.map(col => (
-                <th key={col.key} className="p-3 text-left font-bold text-slate-600 whitespace-nowrap" style={{ minWidth: col.width }}>
+                <th key={col.key} className="p-3 text-left font-bold text-slate-600 dark:text-slate-300 whitespace-nowrap" style={{ minWidth: col.width }}>
                   {col.label} {col.required && <span className="text-rose-500">*</span>}
                 </th>
               ))}
@@ -1116,12 +1162,12 @@ const UnifiedAppModal = ({
           </thead>
           <tbody>
             {rows.map((row, idx) => (
-              <tr key={idx} className="border-b border-slate-100 hover:bg-slate-50/50">
+              <tr key={idx} className="border-b border-slate-100 dark:border-slate-700 hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
                 {columns.map(col => (
                   <td key={col.key} className="p-2" style={{ minWidth: col.width }}>
                     {col.type === 'select' ? (
                       <select 
-                        className={`w-full p-2 bg-white border rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 ${col.required && !row[col.key] ? 'border-rose-300' : 'border-slate-200'}`}
+                        className={`w-full p-2 bg-white dark:bg-slate-800 border rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 dark:text-slate-200 ${col.required && !row[col.key] ? 'border-rose-300' : 'border-slate-200 dark:border-slate-700'}`}
                         value={row[col.key] || ''}
                         onChange={e => updateTechnicalRow(sectionId, idx, col.key, e.target.value)}
                         disabled={readOnly}
@@ -1149,7 +1195,7 @@ const UnifiedAppModal = ({
                     ) : (
                       <input 
                         type={col.type || 'text'}
-                        className={`w-full p-2 bg-white border rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 ${col.required && !row[col.key] ? 'border-rose-300' : 'border-slate-200'} ${col.readOnly ? 'bg-slate-100 text-slate-500' : ''}`}
+                        className={`w-full p-2 bg-white dark:bg-slate-800 border rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 dark:text-slate-200 ${col.required && !row[col.key] ? 'border-rose-300' : 'border-slate-200 dark:border-slate-700'} ${col.readOnly ? 'bg-slate-100 dark:bg-slate-900 text-slate-500 dark:text-slate-400' : ''}`}
                         value={row[col.key] || ''}
                         onChange={e => !col.readOnly && updateTechnicalRow(sectionId, idx, col.key, e.target.value)}
                         placeholder={col.label}
@@ -1187,7 +1233,14 @@ const UnifiedAppModal = ({
   const updateSecretsRow = (section: string, index: number, field: string, value: any) => {
     setSecretsData(prev => {
       const newList = [...(prev[section] || [])];
-      newList[index] = { ...newList[index], [field]: value };
+      const updatedRow = { ...newList[index], [field]: value };
+
+      if (section === 'mapping' && field === 'safeName') {
+          const safe = prev.safes?.find((s: any) => s.safeName === value);
+          updatedRow.techSafe = safe ? safe.techSafeName : '';
+      }
+
+      newList[index] = updatedRow;
       return { ...prev, [section]: newList };
     });
   };
@@ -1335,9 +1388,9 @@ const UnifiedAppModal = ({
       <div className="overflow-x-auto">
         <table className="w-full text-sm border-collapse">
           <thead>
-            <tr className="bg-slate-50 border-b border-slate-200">
+            <tr className="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
               {columns.map(col => (
-                <th key={col.key} className="p-3 text-left font-bold text-slate-600 whitespace-nowrap">
+                <th key={col.key} className="p-3 text-left font-bold text-slate-600 dark:text-slate-300 whitespace-nowrap">
                   {col.label} {col.required && <span className="text-rose-500">*</span>}
                 </th>
               ))}
@@ -1346,12 +1399,12 @@ const UnifiedAppModal = ({
           </thead>
           <tbody>
             {rows.map((row, idx) => (
-              <tr key={idx} className="border-b border-slate-100 hover:bg-slate-50/50">
+              <tr key={idx} className="border-b border-slate-100 dark:border-slate-700 hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
                 {columns.map(col => (
-                  <td key={col.key} className="p-2" style={{ width: col.width }}>
+                  <td key={col.key} className="p-2" style={{ minWidth: col.width }}>
                     {col.type === 'select' ? (
                       <select 
-                        className={`w-full p-2 bg-white border rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 ${col.required && !row[col.key] ? 'border-rose-300' : 'border-slate-200'}`}
+                        className={`w-full p-2 bg-white dark:bg-slate-800 border rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 dark:text-slate-200 ${col.required && !row[col.key] ? 'border-rose-300' : 'border-slate-200 dark:border-slate-700'}`}
                         value={row[col.key] || ''}
                         onChange={e => updateSecretsRow(sectionId, idx, col.key, e.target.value)}
                         disabled={readOnly}
@@ -1372,11 +1425,11 @@ const UnifiedAppModal = ({
                     ) : (
                       <input 
                         type={col.type || 'text'}
-                        className={`w-full p-2 bg-white border rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 ${col.required && !row[col.key] ? 'border-rose-300' : 'border-slate-200'}`}
+                        className={`w-full p-2 bg-white dark:bg-slate-800 border rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 dark:text-slate-200 ${col.required && !row[col.key] ? 'border-rose-300' : 'border-slate-200 dark:border-slate-700'} ${col.readOnly ? 'bg-slate-100 dark:bg-slate-900 text-slate-500 dark:text-slate-400' : ''}`}
                         value={row[col.key] || ''}
-                        onChange={e => updateSecretsRow(sectionId, idx, col.key, e.target.value)}
+                        onChange={e => !col.readOnly && updateSecretsRow(sectionId, idx, col.key, e.target.value)}
                         placeholder={col.label}
-                        disabled={readOnly}
+                        disabled={readOnly || col.readOnly}
                         maxLength={500}
                       />
                     )}
@@ -1453,16 +1506,17 @@ const UnifiedAppModal = ({
   // Derived options for Secrets
   const secretInventoryOptions = (secretsData.inventory || []).map(s => s.name).filter(Boolean);
   const secretSafeOptions = (secretsData.safes || []).map(s => s.safeName).filter(Boolean);
+  const secretTechSafeOptions = (secretsData.safes || []).map(s => s.techSafeName).filter(Boolean);
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 print:p-0 animate-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 print:p-0 animate-in zoom-in-95 duration-200 dark:text-slate-200">
       <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm print:hidden" onClick={onClose}></div>
-      <div className="relative bg-white w-full max-w-[90rem] h-[95vh] rounded-xl shadow-2xl flex flex-col overflow-hidden print:h-auto print:w-full print:max-w-none print:rounded-none print:shadow-none print:absolute print:inset-0 print:z-[100]">
+      <div className="relative bg-white dark:bg-slate-900 w-full max-w-[90rem] h-[95vh] rounded-xl shadow-2xl flex flex-col overflow-hidden print:h-auto print:w-full print:max-w-none print:rounded-none print:shadow-none print:absolute print:inset-0 print:z-[100]">
         
         {/* Header */}
-        <div className="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-white sticky top-0 z-10 print:hidden">
+        <div className="px-8 py-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-white dark:bg-slate-900 sticky top-0 z-10 print:hidden">
             <div>
                 <h2 className="text-2xl font-black text-slate-900">
                    {activeTab === 'onboarding' ? 'PAM Onboarding' : activeTab === 'technical' ? 'Technische Struktur Produktion' : activeTab === 'secrets' ? 'Secrets Management Inventar' : 'Onboarding Secrets Management'}
@@ -1471,18 +1525,18 @@ const UnifiedAppModal = ({
             </div>
             
             {/* Tab Switcher */}
-            <div className="flex bg-slate-100 p-1 rounded-lg mx-4">
+            <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-lg mx-4">
                 {mode === 'pam' && (
                   <>
                     <button 
                       onClick={() => setActiveTab('onboarding')}
-                      className={`px-6 py-2.5 rounded-md text-sm font-bold transition-all flex items-center gap-2 ${activeTab === 'onboarding' ? 'bg-white text-rose-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                      className={`px-6 py-2.5 rounded-md text-sm font-bold transition-all flex items-center gap-2 ${activeTab === 'onboarding' ? 'bg-white dark:bg-slate-700 text-rose-600 dark:text-rose-400 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
                     >
                       <Rocket className="w-4 h-4" /> Onboarding
                     </button>
                     <button 
                       onClick={() => setActiveTab('technical')}
-                      className={`px-6 py-2.5 rounded-md text-sm font-bold transition-all flex items-center gap-2 ${activeTab === 'technical' ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                      className={`px-6 py-2.5 rounded-md text-sm font-bold transition-all flex items-center gap-2 ${activeTab === 'technical' ? 'bg-white dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
                     >
                       <Layers className="w-4 h-4" /> Technische Struktur
                     </button>
@@ -1492,13 +1546,13 @@ const UnifiedAppModal = ({
                   <>
                     <button 
                       onClick={() => setActiveTab('secrets-onboarding')}
-                      className={`px-6 py-2.5 rounded-md text-sm font-bold transition-all flex items-center gap-2 ${activeTab === 'secrets-onboarding' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                      className={`px-6 py-2.5 rounded-md text-sm font-bold transition-all flex items-center gap-2 ${activeTab === 'secrets-onboarding' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
                     >
                       <ClipboardList className="w-4 h-4" /> Onboarding Secrets
                     </button>
                     <button 
                       onClick={() => setActiveTab('secrets')}
-                      className={`px-6 py-2.5 rounded-md text-sm font-bold transition-all flex items-center gap-2 ${activeTab === 'secrets' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                      className={`px-6 py-2.5 rounded-md text-sm font-bold transition-all flex items-center gap-2 ${activeTab === 'secrets' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
                     >
                       <KeyRound className="w-4 h-4" /> Secrets Management Inventar
                     </button>
@@ -1523,23 +1577,23 @@ const UnifiedAppModal = ({
                             setSecretsOnboardingViewMode(v => v === 'form' ? 'history' : 'form');
                         }
                     }}
-                    className={`p-2 rounded-md transition-colors ${(activeTab === 'onboarding' ? onboardingViewMode : activeTab === 'technical' ? technicalViewMode : activeTab === 'secrets' ? secretsViewMode : secretsOnboardingViewMode) === 'history' ? 'bg-indigo-100 text-indigo-600' : 'hover:bg-slate-100 text-slate-500'}`}
+                    className={`p-2 rounded-md transition-colors ${(activeTab === 'onboarding' ? onboardingViewMode : activeTab === 'technical' ? technicalViewMode : activeTab === 'secrets' ? secretsViewMode : secretsOnboardingViewMode) === 'history' ? 'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400' : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400'}`}
                     title="Änderungshistorie"
                 >
                     <HistoryIcon className="w-5 h-5" />
                 </button>
-                <button onClick={exportJSON} className="p-2 hover:bg-slate-100 rounded-md text-slate-500" title="JSON Export"><Download className="w-5 h-5" /></button>
-                <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-md text-slate-500"><X className="w-6 h-6" /></button>
+                <button onClick={exportJSON} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md text-slate-500 dark:text-slate-400" title="JSON Export"><Download className="w-5 h-5" /></button>
+                <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md text-slate-500 dark:text-slate-400"><X className="w-6 h-6" /></button>
             </div>
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-8 bg-slate-50/50 custom-scrollbar print:overflow-visible print:bg-white">
+        <div className="flex-1 overflow-y-auto p-8 bg-slate-50/50 dark:bg-slate-950/50 custom-scrollbar print:overflow-visible print:bg-white">
             {activeTab === 'onboarding' ? (
                 onboardingLoading ? <div className="flex justify-center p-10"><RefreshCw className="animate-spin w-8 h-8 text-indigo-500" /></div> : (
                 onboardingViewMode === 'history' ? (
                     <div className="max-w-4xl mx-auto">
-                        <h3 className="text-xl font-bold mb-6 flex items-center gap-2 text-slate-800">
+                        <h3 className="text-xl font-bold mb-6 flex items-center gap-2 text-slate-800 dark:text-slate-200">
                           <Clock className="w-6 h-6 text-indigo-500" /> Änderungsprotokoll
                         </h3>
                         <PaginatedHistoryList history={onboardingHistory} />
@@ -1548,16 +1602,16 @@ const UnifiedAppModal = ({
                 <div className="space-y-4 max-w-4xl mx-auto">
                     
                     {/* Section 2: Architecture */}
-                    <div className="bg-white rounded-lg border border-slate-200 shadow-sm print:border-0 print:shadow-none">
-                        <button onClick={() => toggleOnboardingSection('architecture')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
-                            <div className="flex items-center gap-3 font-bold text-slate-700"><Database className="w-5 h-5 text-indigo-500" /> 1. Architektur</div>
+                    <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm print:border-0 print:shadow-none">
+                        <button onClick={() => toggleOnboardingSection('architecture')} className="w-full px-6 py-4 flex items-center justify-between bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors print:hidden">
+                            <div className="flex items-center gap-3 font-bold text-slate-700 dark:text-slate-200"><Database className="w-5 h-5 text-indigo-500" /> 1. Architektur</div>
                             <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${onboardingOpenSections['architecture'] ? 'rotate-90' : ''}`} />
                         </button>
                         {(onboardingOpenSections['architecture'] || typeof window !== 'undefined' && window.matchMedia('print').matches) && (
-                            <div className="p-6 border-t border-slate-100 space-y-4">
+                            <div className="p-6 border-t border-slate-100 dark:border-slate-700 space-y-4">
                                 <div className="mb-4">
                                     <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Architektur des Zielsystems</label>
-                                    <textarea className="w-full p-3 bg-slate-50 border border-slate-200 rounded-md h-24 text-sm" value={onboardingData.archDesc || ''} onChange={e => updateField('archDesc', e.target.value)} disabled={readOnly} maxLength={500}></textarea>
+                                    <textarea className="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md h-24 text-sm dark:text-slate-200" value={onboardingData.archDesc || ''} onChange={e => updateField('archDesc', e.target.value)} disabled={readOnly} maxLength={500}></textarea>
                                 </div>
                                 {renderInput("Betriebssysteme", "osList")}
                                 {renderInput("Datenbanken", "dbList")}
@@ -1569,13 +1623,13 @@ const UnifiedAppModal = ({
                     </div>
 
                     {/* Section 3: Technology */}
-                    <div className="bg-white rounded-lg border border-slate-200 shadow-sm print:border-0 print:shadow-none">
-                        <button onClick={() => toggleOnboardingSection('technology')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
-                            <div className="flex items-center gap-3 font-bold text-slate-700"><Settings className="w-5 h-5 text-slate-500" /> 2. Anwendungstechnologie</div>
+                    <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm print:border-0 print:shadow-none">
+                        <button onClick={() => toggleOnboardingSection('technology')} className="w-full px-6 py-4 flex items-center justify-between bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors print:hidden">
+                            <div className="flex items-center gap-3 font-bold text-slate-700 dark:text-slate-200"><Settings className="w-5 h-5 text-slate-500" /> 2. Anwendungstechnologie</div>
                             <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${onboardingOpenSections['technology'] ? 'rotate-90' : ''}`} />
                         </button>
                         {(onboardingOpenSections['technology'] || typeof window !== 'undefined' && window.matchMedia('print').matches) && (
-                            <div className="p-6 border-t border-slate-100 grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="p-6 border-t border-slate-100 dark:border-slate-700 grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {renderInput("Technologie", "techType", "text", undefined, ["Fat Client", "Webbasiert", "Java", "Mischform", "Cloud-Service"])}
                                 {renderCheckbox("Werden Zertifikate benötigt?", "needsCerts")}
                                 {renderCheckbox("Aktives 4-Augen-Prinzip?", "fourEyes")}
@@ -1587,13 +1641,13 @@ const UnifiedAppModal = ({
                     </div>
 
                     {/* Section 4: Login */}
-                    <div className="bg-white rounded-lg border border-slate-200 shadow-sm print:border-0 print:shadow-none">
-                        <button onClick={() => toggleOnboardingSection('login')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
-                            <div className="flex items-center gap-3 font-bold text-slate-700"><LogIn className="w-5 h-5 text-emerald-500" /> 3. Anmeldeverfahren</div>
+                    <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm print:border-0 print:shadow-none">
+                        <button onClick={() => toggleOnboardingSection('login')} className="w-full px-6 py-4 flex items-center justify-between bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors print:hidden">
+                            <div className="flex items-center gap-3 font-bold text-slate-700 dark:text-slate-200"><LogIn className="w-5 h-5 text-emerald-500" /> 3. Anmeldeverfahren</div>
                             <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${onboardingOpenSections['login'] ? 'rotate-90' : ''}`} />
                         </button>
                         {(onboardingOpenSections['login'] || typeof window !== 'undefined' && window.matchMedia('print').matches) && (
-                            <div className="p-6 border-t border-slate-100 space-y-4">
+                            <div className="p-6 border-t border-slate-100 dark:border-slate-700 space-y-4">
                                 {renderInput("Anmeldeverfahren", "loginMethod", "text", undefined, ["Single Sign-On", "Anmeldemaske", "Multifaktor-Authentifizierung", "anderes"])}
                                 {renderInput("Account-Typ", "accountType", "text", "Wichtig für Passwort-Prozess", ["Lokale Accounts", "Domain Accounts"])}
                                 {renderCheckbox("Kann User mehrere Sessions öffnen?", "multiSession")}
@@ -1604,16 +1658,16 @@ const UnifiedAppModal = ({
 
                     {/* Section 5: Password (Conditional) */}
                     {onboardingData.accountType !== 'Domain Accounts' && (
-                    <div className="bg-white rounded-lg border border-slate-200 shadow-sm print:border-0 print:shadow-none">
-                        <button onClick={() => toggleOnboardingSection('password')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
-                            <div className="flex items-center gap-3 font-bold text-slate-700"><ShieldCheck className="w-5 h-5 text-rose-500" /> 4. Passwortwechsel</div>
+                    <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm print:border-0 print:shadow-none">
+                        <button onClick={() => toggleOnboardingSection('password')} className="w-full px-6 py-4 flex items-center justify-between bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors print:hidden">
+                            <div className="flex items-center gap-3 font-bold text-slate-700 dark:text-slate-200"><ShieldCheck className="w-5 h-5 text-rose-500" /> 4. Passwortwechsel</div>
                             <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${onboardingOpenSections['password'] ? 'rotate-90' : ''}`} />
                         </button>
                         {(onboardingOpenSections['password'] || typeof window !== 'undefined' && window.matchMedia('print').matches) && (
-                            <div className="p-6 border-t border-slate-100 space-y-4">
+                            <div className="p-6 border-t border-slate-100 dark:border-slate-700 space-y-4">
                                 <div className="mb-4">
                                     <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Wie werden Passwörter geändert?</label>
-                                    <textarea className="w-full p-3 bg-slate-50 border border-slate-200 rounded-md h-20 text-sm" value={onboardingData.pwChangeDesc || ''} onChange={e => updateField('pwChangeDesc', e.target.value)} disabled={readOnly} maxLength={500}></textarea>
+                                    <textarea className="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md h-20 text-sm dark:text-slate-200" value={onboardingData.pwChangeDesc || ''} onChange={e => updateField('pwChangeDesc', e.target.value)} disabled={readOnly} maxLength={500}></textarea>
                                 </div>
                                 {renderCheckbox("Kann Rotation automatisiert werden?", "autoRotation")}
                                 {renderInput("Wer ändert Passwörter?", "whoChangesPw")}
@@ -1624,13 +1678,13 @@ const UnifiedAppModal = ({
                     )}
 
                     {/* Section 6: Test */}
-                    <div className="bg-white rounded-lg border border-slate-200 shadow-sm print:border-0 print:shadow-none">
-                        <button onClick={() => toggleOnboardingSection('test')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
-                            <div className="flex items-center gap-3 font-bold text-slate-700"><FileCheck className="w-5 h-5 text-amber-500" /> 5. Testuser & Umgebung</div>
+                    <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm print:border-0 print:shadow-none">
+                        <button onClick={() => toggleOnboardingSection('test')} className="w-full px-6 py-4 flex items-center justify-between bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors print:hidden">
+                            <div className="flex items-center gap-3 font-bold text-slate-700 dark:text-slate-200"><FileCheck className="w-5 h-5 text-amber-500" /> 5. Testuser & Umgebung</div>
                             <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${onboardingOpenSections['test'] ? 'rotate-90' : ''}`} />
                         </button>
                         {(onboardingOpenSections['test'] || typeof window !== 'undefined' && window.matchMedia('print').matches) && (
-                            <div className="p-6 border-t border-slate-100 space-y-4">
+                            <div className="p-6 border-t border-slate-100 dark:border-slate-700 space-y-4">
                                 {renderCheckbox("Testuser vorhanden?", "hasTestUsers")}
                                 {onboardingData.hasTestUsers && renderInput("Testuser Accounts", "testUsersList")}
                                 {renderCheckbox("Rechte über Omada?", "omadaRights")}
@@ -1639,13 +1693,13 @@ const UnifiedAppModal = ({
                     </div>
 
                     {/* Section 7: Emergency */}
-                    <div className="bg-white rounded-lg border border-slate-200 shadow-sm print:border-0 print:shadow-none">
-                        <button onClick={() => toggleOnboardingSection('emergency')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
-                            <div className="flex items-center gap-3 font-bold text-slate-700"><AlertTriangle className="w-5 h-5 text-rose-500" /> 6. Notfallprozess</div>
+                    <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm print:border-0 print:shadow-none">
+                        <button onClick={() => toggleOnboardingSection('emergency')} className="w-full px-6 py-4 flex items-center justify-between bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors print:hidden">
+                            <div className="flex items-center gap-3 font-bold text-slate-700 dark:text-slate-200"><AlertTriangle className="w-5 h-5 text-rose-500" /> 6. Notfallprozess</div>
                             <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${onboardingOpenSections['emergency'] ? 'rotate-90' : ''}`} />
                         </button>
                         {(onboardingOpenSections['emergency'] || typeof window !== 'undefined' && window.matchMedia('print').matches) && (
-                            <div className="p-6 border-t border-slate-100 space-y-4">
+                            <div className="p-6 border-t border-slate-100 dark:border-slate-700 space-y-4">
                                 {renderCheckbox("Existieren Notfallaccounts?", "hasEmergencyAccounts")}
                                 {onboardingData.hasEmergencyAccounts && renderInput("Notfall Accounts", "emergencyAccountsList")}
                             </div>
@@ -1653,13 +1707,13 @@ const UnifiedAppModal = ({
                     </div>
 
                     {/* Section 8: Matrix */}
-                    <div className="bg-white rounded-lg border border-slate-200 shadow-sm print:border-0 print:shadow-none">
-                        <button onClick={() => toggleOnboardingSection('matrix')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
-                            <div className="flex items-center gap-3 font-bold text-slate-700"><Link2 className="w-5 h-5 text-indigo-600" /> 7. Vereinbarte Anbindungsvariante</div>
+                    <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm print:border-0 print:shadow-none">
+                        <button onClick={() => toggleOnboardingSection('matrix')} className="w-full px-6 py-4 flex items-center justify-between bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors print:hidden">
+                            <div className="flex items-center gap-3 font-bold text-slate-700 dark:text-slate-200"><Link2 className="w-5 h-5 text-indigo-600" /> 7. Vereinbarte Anbindungsvariante</div>
                             <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${onboardingOpenSections['matrix'] ? 'rotate-90' : ''}`} />
                         </button>
                         {(onboardingOpenSections['matrix'] || typeof window !== 'undefined' && window.matchMedia('print').matches) && (
-                            <div className="p-6 border-t border-slate-100">
+                            <div className="p-6 border-t border-slate-100 dark:border-slate-700">
                                 <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
                                     {renderInput("Anmeldung", "matrixLogin", "text", undefined, ["Automatisch", "Manuell"])}
                                     {renderInput("Passwortwechsel", "matrixPwChange", "text", undefined, ["Automatisch", "Manuell"])}
@@ -1670,13 +1724,13 @@ const UnifiedAppModal = ({
                     </div>
 
                     {/* Section 8: Bypass */}
-                    <div className="bg-white rounded-lg border border-slate-200 shadow-sm print:border-0 print:shadow-none">
-                        <button onClick={() => toggleOnboardingSection('bypass')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
-                            <div className="flex items-center gap-3 font-bold text-slate-700"><Shield className="w-5 h-5 text-rose-500" /> 8. PAM-Bypass Regeln</div>
+                    <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm print:border-0 print:shadow-none">
+                        <button onClick={() => toggleOnboardingSection('bypass')} className="w-full px-6 py-4 flex items-center justify-between bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors print:hidden">
+                            <div className="flex items-center gap-3 font-bold text-slate-700 dark:text-slate-200"><Shield className="w-5 h-5 text-rose-500" /> 8. PAM-Bypass Regeln</div>
                             <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${onboardingOpenSections['bypass'] ? 'rotate-90' : ''}`} />
                         </button>
                         {(onboardingOpenSections['bypass'] || typeof window !== 'undefined' && window.matchMedia('print').matches) && (
-                            <div className="p-6 border-t border-slate-100 space-y-4">
+                            <div className="p-6 border-t border-slate-100 dark:border-slate-700 space-y-4">
                                 {renderInput("S-Base Pro Auftrag", "sBaseProOrder")}
                             </div>
                         )}
@@ -1688,7 +1742,7 @@ const UnifiedAppModal = ({
                 technicalLoading ? <div className="flex justify-center p-10"><RefreshCw className="animate-spin w-8 h-8 text-emerald-500" /></div> : (
                 technicalViewMode === 'history' ? (
                     <div className="max-w-[85rem] mx-auto">
-                        <h3 className="text-xl font-bold mb-6 flex items-center gap-2 text-slate-800">
+                        <h3 className="text-xl font-bold mb-6 flex items-center gap-2 text-slate-800 dark:text-slate-200">
                           <Clock className="w-6 h-6 text-indigo-500" /> Änderungsprotokoll
                         </h3>
                         <PaginatedHistoryList history={technicalHistory} />
@@ -1697,13 +1751,13 @@ const UnifiedAppModal = ({
                 <div className="space-y-6 max-w-[85rem] mx-auto">
                     
                     {/* 1. Servers */}
-                    <div className="bg-white rounded-lg border border-slate-200 shadow-sm print:border-0 print:shadow-none">
-                        <button onClick={() => toggleTechnicalSection('servers')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
-                            <div className="flex items-center gap-3 font-bold text-slate-700"><Server className="w-5 h-5 text-blue-500" /> 1. Server / Betriebssysteme</div>
+                    <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm print:border-0 print:shadow-none">
+                        <button onClick={() => toggleTechnicalSection('servers')} className="w-full px-6 py-4 flex items-center justify-between bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors print:hidden">
+                            <div className="flex items-center gap-3 font-bold text-slate-700 dark:text-slate-200"><Server className="w-5 h-5 text-blue-500" /> 1. Server / Betriebssysteme</div>
                             <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${technicalOpenSections['servers'] ? 'rotate-90' : ''}`} />
                         </button>
                         {(technicalOpenSections['servers'] || typeof window !== 'undefined' && window.matchMedia('print').matches) && (
-                            <div className="p-6 border-t border-slate-100">
+                            <div className="p-6 border-t border-slate-100 dark:border-slate-700">
                                 {renderTable('servers', [
                                   { key: 'serverName', label: 'Servername', required: true },
                                   { key: 'ip', label: 'IP-Adresse' },
@@ -1720,13 +1774,13 @@ const UnifiedAppModal = ({
                     </div>
 
                     {/* 2. Databases */}
-                    <div className="bg-white rounded-lg border border-slate-200 shadow-sm print:border-0 print:shadow-none">
-                        <button onClick={() => toggleTechnicalSection('databases')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
-                            <div className="flex items-center gap-3 font-bold text-slate-700"><Database className="w-5 h-5 text-indigo-500" /> 2. Datenbanken / Server</div>
+                    <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm print:border-0 print:shadow-none">
+                        <button onClick={() => toggleTechnicalSection('databases')} className="w-full px-6 py-4 flex items-center justify-between bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors print:hidden">
+                            <div className="flex items-center gap-3 font-bold text-slate-700 dark:text-slate-200"><Database className="w-5 h-5 text-indigo-500" /> 2. Datenbanken / Server</div>
                             <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${technicalOpenSections['databases'] ? 'rotate-90' : ''}`} />
                         </button>
                         {(technicalOpenSections['databases'] || typeof window !== 'undefined' && window.matchMedia('print').matches) && (
-                            <div className="p-6 border-t border-slate-100">
+                            <div className="p-6 border-t border-slate-100 dark:border-slate-700">
                                 {renderTable('databases', [
                                   { key: 'serverName', label: 'Servername', required: true },
                                   { key: 'ip', label: 'IP-Adresse' },
@@ -1742,13 +1796,13 @@ const UnifiedAppModal = ({
                     </div>
 
                     {/* 3. Ports */}
-                    <div className="bg-white rounded-lg border border-slate-200 shadow-sm print:border-0 print:shadow-none">
-                        <button onClick={() => toggleTechnicalSection('ports')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
-                            <div className="flex items-center gap-3 font-bold text-slate-700"><Network className="w-5 h-5 text-emerald-500" /> 3. Portfreischaltungen</div>
+                    <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm print:border-0 print:shadow-none">
+                        <button onClick={() => toggleTechnicalSection('ports')} className="w-full px-6 py-4 flex items-center justify-between bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors print:hidden">
+                            <div className="flex items-center gap-3 font-bold text-slate-700 dark:text-slate-200"><Network className="w-5 h-5 text-emerald-500" /> 3. Portfreischaltungen</div>
                             <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${technicalOpenSections['ports'] ? 'rotate-90' : ''}`} />
                         </button>
                         {(technicalOpenSections['ports'] || typeof window !== 'undefined' && window.matchMedia('print').matches) && (
-                            <div className="p-6 border-t border-slate-100">
+                            <div className="p-6 border-t border-slate-100 dark:border-slate-700">
                                 {renderTable('ports', [
                                   { key: 'fromServer', label: 'Von Server', type: 'multiselect', options: ['psm1', 'psm2', 'psm3', 'psm4', 'psm5', 'psm6', 'psmp'], width: '300px' },
                                   { key: 'fromStage', label: 'Von Stage', type: 'select', options: ['Prod', 'Test', 'Dev'] },
@@ -1765,13 +1819,13 @@ const UnifiedAppModal = ({
                     </div>
 
                     {/* 4. Safes */}
-                    <div className="bg-white rounded-lg border border-slate-200 shadow-sm print:border-0 print:shadow-none">
-                        <button onClick={() => toggleTechnicalSection('safes')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
-                            <div className="flex items-center gap-3 font-bold text-slate-700"><Lock className="w-5 h-5 text-amber-500" /> 4. Safe-Struktur (CyberArk)</div>
+                    <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm print:border-0 print:shadow-none">
+                        <button onClick={() => toggleTechnicalSection('safes')} className="w-full px-6 py-4 flex items-center justify-between bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors print:hidden">
+                            <div className="flex items-center gap-3 font-bold text-slate-700 dark:text-slate-200"><Lock className="w-5 h-5 text-amber-500" /> 4. Safe-Struktur (CyberArk)</div>
                             <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${technicalOpenSections['safes'] ? 'rotate-90' : ''}`} />
                         </button>
                         {(technicalOpenSections['safes'] || typeof window !== 'undefined' && window.matchMedia('print').matches) && (
-                            <div className="p-6 border-t border-slate-100">
+                            <div className="p-6 border-t border-slate-100 dark:border-slate-700">
                                 {renderTable('safes', [
                                   { key: 'userGroup', label: 'Nutzergruppe' },
                                   { key: 'safeName', label: 'Safe Name (fachlich)', required: true },
@@ -1787,13 +1841,13 @@ const UnifiedAppModal = ({
                     </div>
 
                     {/* 5. Safe Members */}
-                    <div className="bg-white rounded-lg border border-slate-200 shadow-sm print:border-0 print:shadow-none">
-                        <button onClick={() => toggleTechnicalSection('safeMembers')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
-                            <div className="flex items-center gap-3 font-bold text-slate-700"><Users className="w-5 h-5 text-purple-500" /> 5. Mitglieder der Safes</div>
+                    <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm print:border-0 print:shadow-none">
+                        <button onClick={() => toggleTechnicalSection('safeMembers')} className="w-full px-6 py-4 flex items-center justify-between bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors print:hidden">
+                            <div className="flex items-center gap-3 font-bold text-slate-700 dark:text-slate-200"><Users className="w-5 h-5 text-purple-500" /> 5. Mitglieder der Safes</div>
                             <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${technicalOpenSections['safeMembers'] ? 'rotate-90' : ''}`} />
                         </button>
                         {(technicalOpenSections['safeMembers'] || typeof window !== 'undefined' && window.matchMedia('print').matches) && (
-                            <div className="p-6 border-t border-slate-100">
+                            <div className="p-6 border-t border-slate-100 dark:border-slate-700">
                                 <div className="mb-4 p-4 bg-blue-50 text-blue-800 rounded-lg text-sm flex items-start gap-3">
                                   <Info className="w-5 h-5 shrink-0 mt-0.5" />
                                   <div>
@@ -1811,13 +1865,13 @@ const UnifiedAppModal = ({
                     </div>
 
                     {/* 6. Shared Accounts */}
-                    <div className="bg-white rounded-lg border border-slate-200 shadow-sm print:border-0 print:shadow-none">
-                        <button onClick={() => toggleTechnicalSection('sharedAccounts')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
-                            <div className="flex items-center gap-3 font-bold text-slate-700"><Key className="w-5 h-5 text-rose-500" /> 6. Shared Accounts</div>
+                    <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm print:border-0 print:shadow-none">
+                        <button onClick={() => toggleTechnicalSection('sharedAccounts')} className="w-full px-6 py-4 flex items-center justify-between bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors print:hidden">
+                            <div className="flex items-center gap-3 font-bold text-slate-700 dark:text-slate-200"><Key className="w-5 h-5 text-rose-500" /> 6. Shared Accounts</div>
                             <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${technicalOpenSections['sharedAccounts'] ? 'rotate-90' : ''}`} />
                         </button>
                         {(technicalOpenSections['sharedAccounts'] || typeof window !== 'undefined' && window.matchMedia('print').matches) && (
-                            <div className="p-6 border-t border-slate-100">
+                            <div className="p-6 border-t border-slate-100 dark:border-slate-700">
                                 {renderTable('sharedAccounts', [
                                   { key: 'bizName', label: 'Fachlicher Name' },
                                   { key: 'techName', label: 'Technischer Name', required: true },
@@ -1833,13 +1887,13 @@ const UnifiedAppModal = ({
                     </div>
 
                     {/* 7. Permissions */}
-                    <div className="bg-white rounded-lg border border-slate-200 shadow-sm print:border-0 print:shadow-none">
-                        <button onClick={() => toggleTechnicalSection('permissions')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
-                            <div className="flex items-center gap-3 font-bold text-slate-700"><Shield className="w-5 h-5 text-cyan-500" /> 7. Berechtigungszuordnungen</div>
+                    <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm print:border-0 print:shadow-none">
+                        <button onClick={() => toggleTechnicalSection('permissions')} className="w-full px-6 py-4 flex items-center justify-between bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors print:hidden">
+                            <div className="flex items-center gap-3 font-bold text-slate-700 dark:text-slate-200"><Shield className="w-5 h-5 text-cyan-500" /> 7. Berechtigungszuordnungen</div>
                             <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${technicalOpenSections['permissions'] ? 'rotate-90' : ''}`} />
                         </button>
                         {(technicalOpenSections['permissions'] || typeof window !== 'undefined' && window.matchMedia('print').matches) && (
-                            <div className="p-6 border-t border-slate-100">
+                            <div className="p-6 border-t border-slate-100 dark:border-slate-700">
                                 {renderTable('permissions', [
                                   { key: 'bizName', label: 'Fachlicher Account', type: 'select', options: accountOptions },
                                   { key: 'techName', label: 'Technischer Account', type: 'select', options: accountOptions },
@@ -1854,13 +1908,13 @@ const UnifiedAppModal = ({
                     </div>
 
                     {/* 8. Mapping */}
-                    <div className="bg-white rounded-lg border border-slate-200 shadow-sm print:border-0 print:shadow-none">
-                        <button onClick={() => toggleTechnicalSection('mapping')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
-                            <div className="flex items-center gap-3 font-bold text-slate-700"><Link className="w-5 h-5 text-indigo-600" /> 8. Shared Accounts zu Safe</div>
+                    <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm print:border-0 print:shadow-none">
+                        <button onClick={() => toggleTechnicalSection('mapping')} className="w-full px-6 py-4 flex items-center justify-between bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors print:hidden">
+                            <div className="flex items-center gap-3 font-bold text-slate-700 dark:text-slate-200"><Link className="w-5 h-5 text-indigo-600" /> 8. Shared Accounts zu Safe</div>
                             <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${technicalOpenSections['mapping'] ? 'rotate-90' : ''}`} />
                         </button>
                         {(technicalOpenSections['mapping'] || typeof window !== 'undefined' && window.matchMedia('print').matches) && (
-                            <div className="p-6 border-t border-slate-100">
+                            <div className="p-6 border-t border-slate-100 dark:border-slate-700">
                                 {renderTable('mapping', [
                                   { key: 'techAccount', label: 'Technischer Account', type: 'select', options: accountOptions, required: true },
                                   { key: 'bizAccount', label: 'Fachlicher Account', readOnly: true },
@@ -1886,39 +1940,39 @@ const UnifiedAppModal = ({
                 <div className="space-y-6 max-w-[85rem] mx-auto">
                     
                     {/* 1. Secret Inventory */}
-                    <div className="bg-white rounded-lg border border-slate-200 shadow-sm print:border-0 print:shadow-none">
-                        <button onClick={() => toggleSecretsSection('inventory')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
-                            <div className="flex items-center gap-3 font-bold text-slate-700"><KeyRound className="w-5 h-5 text-indigo-500" /> 1. Secret Inventory</div>
+                    <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm print:border-0 print:shadow-none">
+                        <button onClick={() => toggleSecretsSection('inventory')} className="w-full px-6 py-4 flex items-center justify-between bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors print:hidden">
+                            <div className="flex items-center gap-3 font-bold text-slate-700 dark:text-slate-200"><KeyRound className="w-5 h-5 text-indigo-500" /> 1. Secret Inventory</div>
                             <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${secretsOpenSections['inventory'] ? 'rotate-90' : ''}`} />
                         </button>
                         {(secretsOpenSections['inventory'] || typeof window !== 'undefined' && window.matchMedia('print').matches) && (
-                            <div className="p-6 border-t border-slate-100">
+                            <div className="p-6 border-t border-slate-100 dark:border-slate-700">
                                 {renderSecretsTable('inventory', [
-                                  { key: 'category', label: 'Kategorie', type: 'select', options: ['Passwort', 'SSH-Key', 'API-Key', 'Zertifikat'], required: true, width: '180px' },
-                                  { key: 'name', label: 'Name / ID', required: true, width: '200px' },
-                                  { key: 'owner', label: 'Secret Owner', width: '150px' },
-                                  { key: 'holder', label: 'Secret Holder', width: '150px' },
+                                  { key: 'category', label: 'Kategorie', type: 'select', options: ['Passwort', 'SSH-Key', 'API-Key', 'Zertifikat'], required: true, width: '200px' },
+                                  { key: 'name', label: 'Name / ID', required: true, width: '300px' },
+                                  { key: 'owner', label: 'Secret Owner', width: '250px' },
+                                  { key: 'holder', label: 'Secret Holder', width: '250px' },
                                   { key: 'layer', label: 'Layer', type: 'select', options: ['Anwendung', 'Betriebssystem', 'Datenbank'], width: '200px' },
                                   { key: 'localOrAd', label: 'Lokal oder AD', type: 'select', options: ['Lokal', 'AD'], width: '150px' },
                                   { key: 'stage', label: 'Stage', type: 'select', options: ['Prod', 'Test', 'Dev', 'Int'], required: true, width: '150px' },
-                                  { key: 'complexity', label: 'Komplexitätsregeln', width: '200px' },
-                                  { key: 'autoRotation', label: 'Auto Rotation', type: 'select', options: ['Ja', 'Nein'], width: '120px' },
-                                  { key: 'rotationMech', label: 'Rotationsmechanismus', width: '200px' },
-                                  { key: 'frequency', label: 'Häufigkeit', type: 'select', options: ['Täglich', 'Wöchentlich', 'Monatlich', 'Jährlich', 'bei Bedarf'], width: '150px' },
-                                  { key: 'timeWindow', label: 'Zeitfenster', width: '150px' }
+                                  { key: 'complexity', label: 'Komplexitätsregeln', width: '300px' },
+                                  { key: 'autoRotation', label: 'Auto Rotation', type: 'select', options: ['Ja', 'Nein'], width: '150px' },
+                                  { key: 'rotationMech', label: 'Rotationsmechanismus', width: '250px' },
+                                  { key: 'frequency', label: 'Häufigkeit', type: 'select', options: ['Täglich', 'Wöchentlich', 'Monatlich', 'Jährlich', 'bei Bedarf'], width: '200px' },
+                                  { key: 'timeWindow', label: 'Zeitfenster', width: '250px' }
                                 ], true)}
                             </div>
                         )}
                     </div>
 
                     {/* 2. Safe Structure */}
-                    <div className="bg-white rounded-lg border border-slate-200 shadow-sm print:border-0 print:shadow-none">
-                        <button onClick={() => toggleSecretsSection('safes')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
-                            <div className="flex items-center gap-3 font-bold text-slate-700"><Lock className="w-5 h-5 text-amber-500" /> 2. Safe- / Pfad-Struktur</div>
+                    <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm print:border-0 print:shadow-none">
+                        <button onClick={() => toggleSecretsSection('safes')} className="w-full px-6 py-4 flex items-center justify-between bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors print:hidden">
+                            <div className="flex items-center gap-3 font-bold text-slate-700 dark:text-slate-200"><Lock className="w-5 h-5 text-amber-500" /> 2. Safe- / Pfad-Struktur</div>
                             <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${secretsOpenSections['safes'] ? 'rotate-90' : ''}`} />
                         </button>
                         {(secretsOpenSections['safes'] || typeof window !== 'undefined' && window.matchMedia('print').matches) && (
-                            <div className="p-6 border-t border-slate-100">
+                            <div className="p-6 border-t border-slate-100 dark:border-slate-700">
                                 <div className="mb-4 p-4 bg-blue-50 text-blue-800 rounded-lg text-sm flex items-start gap-3">
                                   <Info className="w-5 h-5 shrink-0 mt-0.5" />
                                   <div>
@@ -1940,13 +1994,13 @@ const UnifiedAppModal = ({
                     </div>
 
                     {/* 3. Members */}
-                    <div className="bg-white rounded-lg border border-slate-200 shadow-sm print:border-0 print:shadow-none">
-                        <button onClick={() => toggleSecretsSection('members')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
-                            <div className="flex items-center gap-3 font-bold text-slate-700"><Users className="w-5 h-5 text-purple-500" /> 3. Mitglieder der Safes</div>
+                    <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm print:border-0 print:shadow-none">
+                        <button onClick={() => toggleSecretsSection('members')} className="w-full px-6 py-4 flex items-center justify-between bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors print:hidden">
+                            <div className="flex items-center gap-3 font-bold text-slate-700 dark:text-slate-200"><Users className="w-5 h-5 text-purple-500" /> 3. Mitglieder der Safes</div>
                             <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${secretsOpenSections['members'] ? 'rotate-90' : ''}`} />
                         </button>
                         {(secretsOpenSections['members'] || typeof window !== 'undefined' && window.matchMedia('print').matches) && (
-                            <div className="p-6 border-t border-slate-100">
+                            <div className="p-6 border-t border-slate-100 dark:border-slate-700">
                                 <div className="mb-4 p-4 bg-blue-50 text-blue-800 rounded-lg text-sm flex items-start gap-3">
                                   <Info className="w-5 h-5 shrink-0 mt-0.5" />
                                   <div>
@@ -1964,18 +2018,17 @@ const UnifiedAppModal = ({
                     </div>
 
                     {/* 4. Mapping */}
-                    <div className="bg-white rounded-lg border border-slate-200 shadow-sm print:border-0 print:shadow-none">
-                        <button onClick={() => toggleSecretsSection('mapping')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
-                            <div className="flex items-center gap-3 font-bold text-slate-700"><Link className="w-5 h-5 text-emerald-500" /> 4. Secrets zu Safe</div>
+                    <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm print:border-0 print:shadow-none">
+                        <button onClick={() => toggleSecretsSection('mapping')} className="w-full px-6 py-4 flex items-center justify-between bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors print:hidden">
+                            <div className="flex items-center gap-3 font-bold text-slate-700 dark:text-slate-200"><Link className="w-5 h-5 text-emerald-500" /> 4. Secrets zu Safe</div>
                             <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${secretsOpenSections['mapping'] ? 'rotate-90' : ''}`} />
                         </button>
                         {(secretsOpenSections['mapping'] || typeof window !== 'undefined' && window.matchMedia('print').matches) && (
-                            <div className="p-6 border-t border-slate-100">
+                            <div className="p-6 border-t border-slate-100 dark:border-slate-700">
                                 {renderSecretsTable('mapping', [
                                   { key: 'bizSecret', label: 'Fachlicher Secret Name', type: 'select', options: secretInventoryOptions, required: true },
-                                  { key: 'techSecret', label: 'Technischer Secret Name' },
                                   { key: 'safeName', label: 'Safe Name', type: 'select', options: secretSafeOptions, required: true },
-                                  { key: 'techSafe', label: 'Technischer Safe' }
+                                  { key: 'techSafe', label: 'Technischer Safe', readOnly: true }
                                 ])}
                             </div>
                         )}
@@ -1995,28 +2048,99 @@ const UnifiedAppModal = ({
                 ) : (
                 <div className="space-y-6 max-w-4xl mx-auto">
                     {/* 1. Infrastruktur */}
-                    <div className="bg-white rounded-lg border border-slate-200 shadow-sm print:border-0 print:shadow-none">
-                        <button onClick={() => toggleSecretsOnboardingSection('infrastructure')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
-                            <div className="flex items-center gap-3 font-bold text-slate-700"><Server className="w-5 h-5 text-indigo-500" /> 1. Infrastruktur</div>
+                    <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm print:border-0 print:shadow-none">
+                        <button onClick={() => toggleSecretsOnboardingSection('infrastructure')} className="w-full px-6 py-4 flex items-center justify-between bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors print:hidden">
+                            <div className="flex items-center gap-3 font-bold text-slate-700 dark:text-slate-200"><Server className="w-5 h-5 text-indigo-500" /> 1. Infrastruktur</div>
                             <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${secretsOnboardingOpenSections['infrastructure'] ? 'rotate-90' : ''}`} />
                         </button>
                         {(secretsOnboardingOpenSections['infrastructure'] || typeof window !== 'undefined' && window.matchMedia('print').matches) && (
-                            <div className="p-6 border-t border-slate-100 space-y-4">
+                            <div className="p-6 border-t border-slate-100 dark:border-slate-700 space-y-4">
                                 {renderSecretsOnboardingInput("Von wo aus wird auf die Secrets zugegriffen?", "accessSource")}
-                                {renderSecretsOnboardingInput("Zielarchitektur / Migrationshinweis", "targetArchitecture")}
                                 {renderSecretsOnboardingInput("Betriebsmodell", "operatingModel", "text", undefined, ["On-Prem", "Cloud", "Hybrid"])}
+                                
+                                <div className="mt-6 border-t border-slate-100 dark:border-slate-700 pt-4">
+                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Serverregister</label>
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full text-sm border-collapse">
+                                            <thead>
+                                                <tr className="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
+                                                    <th className="p-3 text-left font-bold text-slate-600 dark:text-slate-300 w-1/3">Hostname</th>
+                                                    <th className="p-3 text-left font-bold text-slate-600 dark:text-slate-300 w-1/3">IP-Adresse</th>
+                                                    <th className="p-3 text-left font-bold text-slate-600 dark:text-slate-300 w-1/3">Segment</th>
+                                                    <th className="p-3 w-10"></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {(secretsOnboardingData.serverRegistry || []).map((row: any, idx: number) => (
+                                                    <tr key={idx} className="border-b border-slate-100 hover:bg-slate-50/50">
+                                                        <td className="p-2">
+                                                            <input 
+                                                                type="text" 
+                                                                className="w-full p-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 dark:text-slate-200"
+                                                                value={row.hostname || ''}
+                                                                onChange={e => updateServerRegistry(idx, 'hostname', e.target.value)}
+                                                                onBlur={e => resolveHostname(idx, e.target.value)}
+                                                                placeholder="Hostname"
+                                                                disabled={readOnly}
+                                                            />
+                                                        </td>
+                                                        <td className="p-2">
+                                                            <input 
+                                                                type="text" 
+                                                                className="w-full p-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 dark:text-slate-200"
+                                                                value={row.ip || ''}
+                                                                onChange={e => updateServerRegistry(idx, 'ip', e.target.value)}
+                                                                placeholder="IP-Adresse"
+                                                                disabled={readOnly}
+                                                            />
+                                                        </td>
+                                                        <td className="p-2">
+                                                            <select 
+                                                                className="w-full p-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 dark:text-slate-200"
+                                                                value={row.segment || 'Produktion'}
+                                                                onChange={e => updateServerRegistry(idx, 'segment', e.target.value)}
+                                                                disabled={readOnly}
+                                                            >
+                                                                <option value="Produktion">Produktion</option>
+                                                                <option value="Test">Test</option>
+                                                                <option value="Entwicklung">Entwicklung</option>
+                                                            </select>
+                                                        </td>
+                                                        <td className="p-2 text-center">
+                                                            {!readOnly && (
+                                                                <button onClick={() => removeServerRegistryRow(idx)} className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors">
+                                                                    <Trash2 className="w-4 h-4" />
+                                                                </button>
+                                                            )}
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                                {(secretsOnboardingData.serverRegistry || []).length === 0 && (
+                                                    <tr>
+                                                        <td colSpan={4} className="p-4 text-center text-slate-400 italic">Keine Server eingetragen.</td>
+                                                    </tr>
+                                                )}
+                                            </tbody>
+                                        </table>
+                                        {!readOnly && (
+                                            <button onClick={addServerRegistryRow} className="mt-3 flex items-center gap-2 text-sm font-bold text-indigo-600 hover:text-indigo-700 px-3 py-2 hover:bg-indigo-50 rounded-lg transition-colors">
+                                                <Plus className="w-4 h-4" /> Server hinzufügen
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
                         )}
                     </div>
 
                     {/* 2. Tool-Nutzung */}
-                    <div className="bg-white rounded-lg border border-slate-200 shadow-sm print:border-0 print:shadow-none">
-                        <button onClick={() => toggleSecretsOnboardingSection('tools')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
-                            <div className="flex items-center gap-3 font-bold text-slate-700"><Settings className="w-5 h-5 text-indigo-500" /> 2. Tool-Nutzung</div>
+                    <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm print:border-0 print:shadow-none">
+                        <button onClick={() => toggleSecretsOnboardingSection('tools')} className="w-full px-6 py-4 flex items-center justify-between bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors print:hidden">
+                            <div className="flex items-center gap-3 font-bold text-slate-700 dark:text-slate-200"><Settings className="w-5 h-5 text-indigo-500" /> 2. Tool-Nutzung</div>
                             <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${secretsOnboardingOpenSections['tools'] ? 'rotate-90' : ''}`} />
                         </button>
                         {(secretsOnboardingOpenSections['tools'] || typeof window !== 'undefined' && window.matchMedia('print').matches) && (
-                            <div className="p-6 border-t border-slate-100 space-y-4">
+                            <div className="p-6 border-t border-slate-100 dark:border-slate-700 space-y-4">
                                 {renderSecretsOnboardingInput("Läuft die Anwendung auf:", "appType", "text", undefined, ["Statischer Server", "Container"])}
                                 {renderSecretsOnboardingInput("Betriebssystem", "os")}
                                 {renderSecretsOnboardingInput("Wie wird die Anwendung bereitgestellt?", "deployment")}
@@ -2027,13 +2151,13 @@ const UnifiedAppModal = ({
 
                     {/* 3. Container - Standalone */}
                     {secretsOnboardingData.appType === 'Container' && (
-                    <div className="bg-white rounded-lg border border-slate-200 shadow-sm print:border-0 print:shadow-none">
-                        <button onClick={() => toggleSecretsOnboardingSection('container_standalone')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
-                            <div className="flex items-center gap-3 font-bold text-slate-700"><Database className="w-5 h-5 text-indigo-500" /> 3. Container – Standalone</div>
+                    <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm print:border-0 print:shadow-none">
+                        <button onClick={() => toggleSecretsOnboardingSection('container_standalone')} className="w-full px-6 py-4 flex items-center justify-between bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors print:hidden">
+                            <div className="flex items-center gap-3 font-bold text-slate-700 dark:text-slate-200"><Database className="w-5 h-5 text-indigo-500" /> 3. Container – Standalone</div>
                             <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${secretsOnboardingOpenSections['container_standalone'] ? 'rotate-90' : ''}`} />
                         </button>
                         {(secretsOnboardingOpenSections['container_standalone'] || typeof window !== 'undefined' && window.matchMedia('print').matches) && (
-                            <div className="p-6 border-t border-slate-100 space-y-4">
+                            <div className="p-6 border-t border-slate-100 dark:border-slate-700 space-y-4">
                                 {renderSecretsOnboardingInput("Wurde der Container / die Anwendung selbst erstellt?", "containerSelfBuilt", "text", undefined, ["Ja", "Nein", "N/A"])}
                             </div>
                         )}
@@ -2042,13 +2166,13 @@ const UnifiedAppModal = ({
 
                     {/* 4. Container - K8s */}
                     {secretsOnboardingData.appType === 'Container' && (
-                    <div className="bg-white rounded-lg border border-slate-200 shadow-sm print:border-0 print:shadow-none">
-                        <button onClick={() => toggleSecretsOnboardingSection('container_k8s')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
-                            <div className="flex items-center gap-3 font-bold text-slate-700"><Cloud className="w-5 h-5 text-indigo-500" /> 4. Container – Kubernetes / OpenShift</div>
+                    <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm print:border-0 print:shadow-none">
+                        <button onClick={() => toggleSecretsOnboardingSection('container_k8s')} className="w-full px-6 py-4 flex items-center justify-between bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors print:hidden">
+                            <div className="flex items-center gap-3 font-bold text-slate-700 dark:text-slate-200"><Cloud className="w-5 h-5 text-indigo-500" /> 4. Container – Kubernetes / OpenShift</div>
                             <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${secretsOnboardingOpenSections['container_k8s'] ? 'rotate-90' : ''}`} />
                         </button>
                         {(secretsOnboardingOpenSections['container_k8s'] || typeof window !== 'undefined' && window.matchMedia('print').matches) && (
-                            <div className="p-6 border-t border-slate-100 space-y-4">
+                            <div className="p-6 border-t border-slate-100 dark:border-slate-700 space-y-4">
                                 {renderSecretsOnboardingInput("Verwendet die Anwendung Kubernetes Secrets?", "k8sSecrets", "text", undefined, ["Ja", "Nein", "N/A"])}
                                 {renderSecretsOnboardingInput("Besteht Kontrolle über den Anwendungscode?", "codeControl", "text", undefined, ["Ja", "Nein", "N/A"])}
                                 <div className="p-3 bg-amber-50 text-amber-800 text-sm rounded-lg border border-amber-100 flex gap-2">
@@ -2062,13 +2186,14 @@ const UnifiedAppModal = ({
 
                     {/* 5. Cloud Computing */}
                     {(secretsOnboardingData.operatingModel === 'Cloud' || secretsOnboardingData.operatingModel === 'Hybrid') && (
-                    <div className="bg-white rounded-lg border border-slate-200 shadow-sm print:border-0 print:shadow-none">
-                        <button onClick={() => toggleSecretsOnboardingSection('cloud')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
-                            <div className="flex items-center gap-3 font-bold text-slate-700"><Cloud className="w-5 h-5 text-indigo-500" /> 5. Cloud Computing</div>
+                    <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm print:border-0 print:shadow-none">
+                        <button onClick={() => toggleSecretsOnboardingSection('cloud')} className="w-full px-6 py-4 flex items-center justify-between bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors print:hidden">
+                            <div className="flex items-center gap-3 font-bold text-slate-700 dark:text-slate-200"><Cloud className="w-5 h-5 text-indigo-500" /> 5. Cloud Computing</div>
                             <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${secretsOnboardingOpenSections['cloud'] ? 'rotate-90' : ''}`} />
                         </button>
                         {(secretsOnboardingOpenSections['cloud'] || typeof window !== 'undefined' && window.matchMedia('print').matches) && (
-                            <div className="p-6 border-t border-slate-100 space-y-4">
+                            <div className="p-6 border-t border-slate-100 dark:border-slate-700 space-y-4">
+                                {renderSecretsOnboardingInput("Cloud in", "cloudIn", "text", undefined, ["FCN", "FCPI", "SAAS"])}
                                 {renderSecretsOnboardingInput("Nutzung von Serverless Functions?", "serverless", "text", undefined, ["Ja", "Nein", "N/A"])}
                                 {renderSecretsOnboardingInput("Nutzung von VMs in der Cloud (Hyperscaler)?", "cloudVMs", "text", undefined, ["Ja", "Nein", "N/A"])}
                             </div>
@@ -2077,13 +2202,13 @@ const UnifiedAppModal = ({
                     )}
 
                     {/* 6. Server */}
-                    <div className="bg-white rounded-lg border border-slate-200 shadow-sm print:border-0 print:shadow-none">
-                        <button onClick={() => toggleSecretsOnboardingSection('server')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
-                            <div className="flex items-center gap-3 font-bold text-slate-700"><Server className="w-5 h-5 text-indigo-500" /> 6. Server</div>
+                    <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm print:border-0 print:shadow-none">
+                        <button onClick={() => toggleSecretsOnboardingSection('server')} className="w-full px-6 py-4 flex items-center justify-between bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors print:hidden">
+                            <div className="flex items-center gap-3 font-bold text-slate-700 dark:text-slate-200"><Server className="w-5 h-5 text-indigo-500" /> 6. Server</div>
                             <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${secretsOnboardingOpenSections['server'] ? 'rotate-90' : ''}`} />
                         </button>
                         {(secretsOnboardingOpenSections['server'] || typeof window !== 'undefined' && window.matchMedia('print').matches) && (
-                            <div className="p-6 border-t border-slate-100 space-y-4">
+                            <div className="p-6 border-t border-slate-100 dark:border-slate-700 space-y-4">
                                 {secretsOnboardingData.operatingModel === 'On-Prem' && (
                                     <div className="p-3 bg-blue-50 text-blue-800 text-sm rounded-lg border border-blue-100 mb-4">
                                         <strong>Hinweis:</strong> Bitte beantworten Sie die folgenden Fragen spezifisch für Ihre On-Prem Server-Umgebung.
@@ -2105,13 +2230,13 @@ const UnifiedAppModal = ({
                     </div>
 
                     {/* 7. Eigenschaften der Secrets */}
-                    <div className="bg-white rounded-lg border border-slate-200 shadow-sm print:border-0 print:shadow-none">
-                        <button onClick={() => toggleSecretsOnboardingSection('properties')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
-                            <div className="flex items-center gap-3 font-bold text-slate-700"><Key className="w-5 h-5 text-indigo-500" /> 7. Eigenschaften der Secrets</div>
+                    <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm print:border-0 print:shadow-none">
+                        <button onClick={() => toggleSecretsOnboardingSection('properties')} className="w-full px-6 py-4 flex items-center justify-between bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors print:hidden">
+                            <div className="flex items-center gap-3 font-bold text-slate-700 dark:text-slate-200"><Key className="w-5 h-5 text-indigo-500" /> 7. Eigenschaften der Secrets</div>
                             <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${secretsOnboardingOpenSections['properties'] ? 'rotate-90' : ''}`} />
                         </button>
                         {(secretsOnboardingOpenSections['properties'] || typeof window !== 'undefined' && window.matchMedia('print').matches) && (
-                            <div className="p-6 border-t border-slate-100 space-y-4">
+                            <div className="p-6 border-t border-slate-100 dark:border-slate-700 space-y-4">
                                 {renderSecretsOnboardingMultiSelect("Welche Arten von Secrets werden genutzt?", "secretTypes", ["Passwörter", "API-Keys", "Zertifikate", "SSH-Keys"])}
                                 {renderSecretsOnboardingMultiSelect("Wie werden Secrets aktuell gespeichert?", "secretStorage", ["Config-Files", "ENV-Variablen", "Kubernetes Secrets", "Hard-coded", "Hardware-HSM"])}
                                 {((secretsOnboardingData.secretStorage as string[]) || []).includes('Hard-coded') && (
@@ -2126,13 +2251,13 @@ const UnifiedAppModal = ({
                     </div>
 
                     {/* 8. Rotation - Ist-Status */}
-                    <div className="bg-white rounded-lg border border-slate-200 shadow-sm print:border-0 print:shadow-none">
-                        <button onClick={() => toggleSecretsOnboardingSection('rotation_status')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
-                            <div className="flex items-center gap-3 font-bold text-slate-700"><RefreshCw className="w-5 h-5 text-indigo-500" /> 8. Rotation – Ist-Status</div>
+                    <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm print:border-0 print:shadow-none">
+                        <button onClick={() => toggleSecretsOnboardingSection('rotation_status')} className="w-full px-6 py-4 flex items-center justify-between bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors print:hidden">
+                            <div className="flex items-center gap-3 font-bold text-slate-700 dark:text-slate-200"><RefreshCw className="w-5 h-5 text-indigo-500" /> 8. Rotation – Ist-Status</div>
                             <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${secretsOnboardingOpenSections['rotation_status'] ? 'rotate-90' : ''}`} />
                         </button>
                         {(secretsOnboardingOpenSections['rotation_status'] || typeof window !== 'undefined' && window.matchMedia('print').matches) && (
-                            <div className="p-6 border-t border-slate-100 space-y-4">
+                            <div className="p-6 border-t border-slate-100 dark:border-slate-700 space-y-4">
                                 {renderSecretsOnboardingInput("Gibt es Secrets, deren Rotation in der Verantwortung der Deka liegt?", "rotationResponsibility", "text", undefined, ["Ja", "Nein"])}
                                 {renderSecretsOnboardingMultiSelect("Gilt dies für:", "rotationLevel", ["Datenbankebene", "Anwendungsebene"])}
                                 {renderSecretsOnboardingInput("Wie erfolgt die bisherige Rotation?", "currentRotation", "text", undefined, ["Manuell", "Teilautomatisiert", "Vollautomatisiert", "Bereits über CyberArk"])}
@@ -2141,13 +2266,13 @@ const UnifiedAppModal = ({
                     </div>
 
                     {/* 9. Anbindungsvariante (Zielbild) */}
-                    <div className="bg-white rounded-lg border border-slate-200 shadow-sm print:border-0 print:shadow-none">
-                        <button onClick={() => toggleSecretsOnboardingSection('target_image')} className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors print:hidden">
-                            <div className="flex items-center gap-3 font-bold text-slate-700"><Link2 className="w-5 h-5 text-indigo-500" /> 9. Anbindungsvariante (Zielbild)</div>
+                    <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm print:border-0 print:shadow-none">
+                        <button onClick={() => toggleSecretsOnboardingSection('target_image')} className="w-full px-6 py-4 flex items-center justify-between bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors print:hidden">
+                            <div className="flex items-center gap-3 font-bold text-slate-700 dark:text-slate-200"><Link2 className="w-5 h-5 text-indigo-500" /> 9. Anbindungsvariante (Zielbild)</div>
                             <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${secretsOnboardingOpenSections['target_image'] ? 'rotate-90' : ''}`} />
                         </button>
                         {(secretsOnboardingOpenSections['target_image'] || typeof window !== 'undefined' && window.matchMedia('print').matches) && (
-                            <div className="p-6 border-t border-slate-100 space-y-4">
+                            <div className="p-6 border-t border-slate-100 dark:border-slate-700 space-y-4">
                                 {renderSecretsOnboardingInput("Eingesetztes Secrets-Management-Tool", "targetTool", "text", undefined, ["CyberArk CP", "CyberArk CCP", "HashiCorp Vault"])}
                                 {renderSecretsOnboardingInput("Anbindungsvariante", "targetVariant", "text", undefined, ["Vollautomatisiert zur Laufzeit", "Hybrid", "Manuelle Inventarisierung"])}
                                 {renderSecretsOnboardingInput("Rotationsmechanismus", "targetRotationMech", "text", undefined, ["Automatisch", "Teilautomatisiert", "Manuell"])}
@@ -2162,15 +2287,22 @@ const UnifiedAppModal = ({
         </div>
 
         {/* Footer */}
-        <div className="p-6 border-t border-slate-100 bg-white flex justify-end gap-4 print:hidden">
+        <div className="p-6 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 flex justify-end gap-4 print:hidden">
             <button onClick={onClose} className="px-6 py-3 font-bold text-slate-500 hover:bg-slate-50 rounded-lg transition-colors">Schließen</button>
             {!readOnly && (
             <button 
                 onClick={activeTab === 'onboarding' ? handleOnboardingSave : activeTab === 'technical' ? handleTechnicalSave : activeTab === 'secrets' ? handleSecretsSave : handleSecretsOnboardingSave} 
-                disabled={activeTab === 'onboarding' ? onboardingSaving : activeTab === 'technical' ? technicalSaving : activeTab === 'secrets' ? secretsSaving : secretsOnboardingSaving} 
-                className="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg shadow-lg shadow-indigo-200 transition-all active:scale-95 flex items-center gap-2"
+                disabled={(activeTab === 'onboarding' ? onboardingSaveStatus : activeTab === 'technical' ? technicalSaveStatus : activeTab === 'secrets' ? secretsSaveStatus : secretsOnboardingSaveStatus) === 'saving'} 
+                className={`px-8 py-3 font-bold rounded-lg shadow-lg transition-all active:scale-95 flex items-center gap-2 ${
+                    (activeTab === 'onboarding' ? onboardingSaveStatus : activeTab === 'technical' ? technicalSaveStatus : activeTab === 'secrets' ? secretsSaveStatus : secretsOnboardingSaveStatus) === 'success' 
+                    ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-200' 
+                    : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-200'
+                }`}
             >
-                {(activeTab === 'onboarding' ? onboardingSaving : activeTab === 'technical' ? technicalSaving : activeTab === 'secrets' ? secretsSaving : secretsOnboardingSaving) ? <RefreshCw className="animate-spin w-5 h-5" /> : <Save className="w-5 h-5" />} Speichern
+                {(activeTab === 'onboarding' ? onboardingSaveStatus : activeTab === 'technical' ? technicalSaveStatus : activeTab === 'secrets' ? secretsSaveStatus : secretsOnboardingSaveStatus) === 'saving' ? <RefreshCw className="animate-spin w-5 h-5" /> : 
+                 (activeTab === 'onboarding' ? onboardingSaveStatus : activeTab === 'technical' ? technicalSaveStatus : activeTab === 'secrets' ? secretsSaveStatus : secretsOnboardingSaveStatus) === 'success' ? <CheckCircle className="w-5 h-5" /> : 
+                 <Save className="w-5 h-5" />} 
+                {(activeTab === 'onboarding' ? onboardingSaveStatus : activeTab === 'technical' ? technicalSaveStatus : activeTab === 'secrets' ? secretsSaveStatus : secretsOnboardingSaveStatus) === 'success' ? 'Gespeichert' : 'Speichern'}
             </button>
             )}
         </div>
@@ -2200,7 +2332,15 @@ const App = () => {
   const [onboardingVariant, setOnboardingVariant] = useState<string>('');
   const [filters, setFilters] = useState<Record<string, string>>({});
   const [isAcceptanceConfirmOpen, setIsAcceptanceConfirmOpen] = useState(false);
+  const [isTableExpanded, setIsTableExpanded] = useState(false);
   const saveLock = React.useRef(false);
+  // Initialisierung: Standard ist false (Light Mode), es sei denn 'true' steht im Storage
+  const [darkMode, setDarkMode] = useState(() => {
+    if (typeof window !== 'undefined') {
+        return localStorage.getItem('pxm_dark_mode') === 'true';
+    }
+    return false;
+  });
 
   const isReadOnly = role === 'readonly';
 
@@ -2234,6 +2374,16 @@ const App = () => {
         setOnboardingVariant('');
     }
   }, [isModalOpen, editingRow?.id]);
+
+  useEffect(() => {
+    const root = window.document.documentElement;
+    if (darkMode) {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
+    localStorage.setItem('pxm_dark_mode', String(darkMode));
+  }, [darkMode]);
 
   const checkConnectivity = async () => {
     setLoading(true);
@@ -2272,6 +2422,12 @@ const App = () => {
       setLoading(false);
     }
   };
+
+  const visibleHeaders = useMemo(() => {
+    if (isTableExpanded) return DEFAULT_HEADERS;
+    const cutoffIndex = DEFAULT_HEADERS.indexOf("Kritikalität");
+    return DEFAULT_HEADERS.slice(0, cutoffIndex + 1);
+  }, [isTableExpanded]);
 
   const filteredData = useMemo(() => {
     return data.filter(row => {
@@ -2341,12 +2497,14 @@ const App = () => {
       }
       
       setSaveStatus('success');
+      checkConnectivity();
       setTimeout(() => { 
-        setIsModalOpen(false); 
+        if (!isUpdate) {
+            setIsModalOpen(false);
+        }
         setSaveStatus('idle'); 
-        checkConnectivity(); 
         saveLock.current = false;
-      }, 800);
+      }, 2000);
     } catch (err: any) {
       setSaveStatus('error');
       setLastError(err.message);
@@ -2614,7 +2772,7 @@ const App = () => {
       ]);
 
       addTableToSheet(wsSecrets, "4. Secrets zu Safe", secData.mapping, [
-          { key: 'bizSecret', label: 'Fachl. Secret' }, { key: 'techSecret', label: 'Tech. Secret' }, 
+          { key: 'bizSecret', label: 'Fachl. Secret' }, 
           { key: 'safeName', label: 'Safe Name' }, { key: 'techSafe', label: 'Tech. Safe' }
       ]);
 
@@ -2715,7 +2873,7 @@ const App = () => {
     if (fieldName === "Anbindungsvariante") {
         return (
             <div key={fieldName} className="space-y-1.5">
-                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-[0.1em] ml-1">
+                <label className="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.1em] ml-1">
                   {fieldName}
                 </label>
                 <div className="relative">
@@ -2740,13 +2898,13 @@ const App = () => {
 
     return (
       <div key={fieldName} className="space-y-1.5">
-        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-[0.1em] ml-1">
+        <label className="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.1em] ml-1">
           {fieldName}
         </label>
         {options ? (
           <div className="relative group">
             <select 
-              className={`w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-4 focus:ring-indigo-50 focus:border-indigo-500 transition-all outline-none font-semibold text-sm appearance-none cursor-pointer ${isTechnical ? 'font-mono' : ''}`}
+              className={`w-full p-3.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:bg-white dark:focus:bg-slate-900 focus:ring-4 focus:ring-indigo-50 focus:border-indigo-500 transition-all outline-none font-semibold text-sm appearance-none cursor-pointer dark:text-slate-200 ${isTechnical ? 'font-mono' : ''}`}
               value={editingRow?.[fieldName] || ''}
               onChange={(e) => setEditingRow({...editingRow, [fieldName]: e.target.value})}
               disabled={isReadOnly}
@@ -2759,7 +2917,7 @@ const App = () => {
         ) : (
           <textarea 
             rows={1}
-            className={`w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-4 focus:ring-indigo-50 focus:border-indigo-500 transition-all outline-none font-semibold text-sm resize-none ${isTechnical ? 'font-mono' : ''}`}
+            className={`w-full p-3.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:bg-white dark:focus:bg-slate-900 focus:ring-4 focus:ring-indigo-50 focus:border-indigo-500 transition-all outline-none font-semibold text-sm resize-none dark:text-slate-200 ${isTechnical ? 'font-mono' : ''}`}
             value={editingRow?.[fieldName] || ''}
             onChange={(e) => setEditingRow({...editingRow, [fieldName]: e.target.value})}
             disabled={isReadOnly}
@@ -2777,7 +2935,7 @@ const App = () => {
   if (!user) {
     return (
         <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-          <div className="bg-white w-full max-w-md rounded-xl shadow-2xl p-10 animate-in zoom-in-95 duration-300 border border-slate-100">
+          <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-xl shadow-2xl p-10 animate-in zoom-in-95 duration-300 border border-slate-100 dark:border-slate-800">
             <div className="flex justify-center mb-8">
                 <div className="bg-indigo-600 p-5 rounded-lg shadow-xl shadow-indigo-200">
                     <Database className="w-10 h-10 text-white" />
@@ -2790,7 +2948,7 @@ const App = () => {
                 <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 ml-1">Benutzername</label>
                 <input 
                   autoFocus
-                  className="w-full p-4 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-4 focus:ring-indigo-50 focus:border-indigo-500 outline-none font-bold text-slate-700 transition-all"
+                  className="w-full p-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:bg-white dark:focus:bg-slate-900 focus:ring-4 focus:ring-indigo-50 focus:border-indigo-500 outline-none font-bold text-slate-700 dark:text-slate-200 transition-all"
                   value={loginCreds.username}
                   onChange={e => setLoginCreds({...loginCreds, username: e.target.value})}
                   placeholder="Benutzername"
@@ -2800,7 +2958,7 @@ const App = () => {
                 <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 ml-1">Passwort</label>
                 <input 
                   type="password"
-                  className="w-full p-4 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-4 focus:ring-indigo-50 focus:border-indigo-500 outline-none font-bold text-slate-700 transition-all"
+                  className="w-full p-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:bg-white dark:focus:bg-slate-900 focus:ring-4 focus:ring-indigo-50 focus:border-indigo-500 outline-none font-bold text-slate-700 dark:text-slate-200 transition-all"
                   value={loginCreds.password}
                   onChange={e => setLoginCreds({...loginCreds, password: e.target.value})}
                   placeholder="••••••••"
@@ -2816,8 +2974,8 @@ const App = () => {
   }
 
   return (
-    <div className="h-screen bg-slate-50 text-slate-900 selection:bg-indigo-100 selection:text-indigo-900 flex flex-col overflow-hidden">
-      <header className="bg-white/80 backdrop-blur-md border-b px-8 py-5 flex justify-between items-center shadow-sm shrink-0 z-40">
+    <div className="h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 selection:bg-indigo-100 selection:text-indigo-900 flex flex-col overflow-hidden">
+      <header className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 px-8 py-5 flex justify-between items-center shadow-sm shrink-0 z-40">
         <div className="flex items-center gap-5">
           <div className={`p-2.5 rounded-lg text-white transition-all duration-700 shadow-lg ${
             connectionState === 'online' ? 'bg-indigo-600 shadow-indigo-200' : 
@@ -2826,7 +2984,7 @@ const App = () => {
             <Database className="w-6 h-6" />
           </div>
           <div>
-            <h1 className="text-2xl font-black tracking-[-0.03em] leading-none mb-1 text-slate-900">PXM Manager</h1>
+            <h1 className="text-2xl font-black tracking-[-0.03em] leading-none mb-1 text-slate-900 dark:text-white">PXM Manager</h1>
             <div className="flex items-center gap-2">
                <span className="text-[10px] font-extrabold uppercase tracking-[0.15em] flex items-center gap-1.5">
                  {connectionState === 'online' ? (
@@ -2842,7 +3000,11 @@ const App = () => {
         </div>
         
         <div className="flex items-center gap-4">
-          <button onClick={handleLogout} className="px-5 py-2 rounded-lg font-bold flex items-center gap-3 bg-slate-50 text-slate-500 border border-slate-100 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-100 transition-all">
+          <button onClick={() => setDarkMode(!darkMode)} className="p-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all active:scale-95 group" title={darkMode ? "Light Mode" : "Dark Mode"}>
+              {darkMode ? <Sun className="w-5 h-5 text-amber-400" /> : <Moon className="w-5 h-5 text-slate-400 group-hover:text-slate-600" />}
+          </button>
+
+          <button onClick={handleLogout} className="px-5 py-2 rounded-lg font-bold flex items-center gap-3 bg-slate-50 dark:bg-slate-900 text-slate-500 dark:text-slate-400 border border-slate-100 dark:border-slate-800 hover:bg-rose-50 dark:hover:bg-rose-900/30 hover:text-rose-600 dark:hover:text-rose-400 hover:border-rose-100 dark:hover:border-rose-800 transition-all">
             <div className="flex flex-col items-end">
                 <span className="text-[10px] font-black uppercase tracking-wider text-indigo-500">{role === 'admin' ? 'Admin' : role === 'maintenance' ? 'Pflege' : 'Read Only'}</span>
                 <span className="text-sm leading-none">{user}</span>
@@ -2851,14 +3013,14 @@ const App = () => {
             <LogOut className="w-4 h-4" />
           </button>
 
-          <button onClick={checkConnectivity} className="p-3 hover:bg-slate-100 rounded-lg transition-all active:scale-95 group" title="Aktualisieren">
+          <button onClick={checkConnectivity} className="p-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all active:scale-95 group" title="Aktualisieren">
             <RefreshCw className={`w-5 h-5 text-slate-400 group-hover:text-slate-600 ${loading ? 'animate-spin' : ''}`} />
           </button>
           
           <button 
             onClick={exportToExcel}
             disabled={data.length === 0}
-            className="px-5 py-3 rounded-lg font-extrabold flex items-center gap-2.5 border-2 border-slate-100 hover:border-slate-200 bg-white text-slate-600 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+            className="px-5 py-3 rounded-lg font-extrabold flex items-center gap-2.5 border-2 border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
           >
             <FileDown className="w-5 h-5" /> Export
           </button>
@@ -2870,7 +3032,7 @@ const App = () => {
             className={`px-6 py-3 rounded-lg font-extrabold flex items-center gap-2.5 shadow-xl transition-all active:scale-[0.98] ${
               connectionState === 'online' 
                 ? 'bg-slate-900 hover:bg-black text-white' 
-                : 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'
+                : 'bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed shadow-none'
             }`}
           >
             <Plus className="w-5 h-5 stroke-[3px]" /> Neu
@@ -2906,41 +3068,55 @@ const App = () => {
               <input 
                 type="text" 
                 placeholder="Katalog durchsuchen..." 
-                className="w-full pl-14 pr-6 py-4 bg-white border border-slate-200 rounded-lg focus:ring-[6px] focus:ring-indigo-50 focus:border-indigo-500 outline-none transition-all shadow-sm font-semibold placeholder:text-slate-300"
+                className="w-full pl-14 pr-6 py-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-[6px] focus:ring-indigo-50 focus:border-indigo-500 outline-none transition-all shadow-sm font-semibold placeholder:text-slate-300 dark:placeholder:text-slate-500 dark:text-slate-200"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
 
-            <div className="bg-white rounded-xl shadow-2xl shadow-slate-200/50 border border-slate-100 overflow-hidden flex-1 flex flex-col">
+            <div className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 overflow-hidden flex-1 flex flex-col">
               <div className="overflow-auto custom-scrollbar flex-1">
-                <table className="w-full border-collapse min-w-[2200px]">
+                <table className={`w-full border-collapse ${isTableExpanded ? 'min-w-[2200px]' : 'min-w-full'}`}>
                   <thead>
-                    <tr className="bg-slate-50/40 border-b border-slate-100">
-                      <th className="sticky left-0 top-0 bg-white z-30 px-4 py-4 text-center w-[80px] text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] shadow-[0_1px_0_#f1f5f9] align-top">
+                    <tr className="bg-slate-50/40 dark:bg-slate-800/40 border-b border-slate-100 dark:border-slate-800">
+                      <th className="sticky left-0 top-0 bg-white dark:bg-slate-900 z-30 px-4 py-4 text-center w-[80px] min-w-[80px] text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] shadow-[0_1px_0_#f1f5f9] dark:shadow-[0_1px_0_#1e293b] align-top">
                         <div className="mb-3">Status</div>
                       </th>
-                      <th className="sticky left-[80px] top-0 bg-white z-30 px-4 py-4 text-center text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-r border-slate-50 shadow-[6px_0_12px_-6px_rgba(0,0,0,0.04),0_1px_0_#f1f5f9] align-top">
+                      <th className="sticky left-[80px] top-0 bg-white dark:bg-slate-900 z-30 px-4 py-4 text-center w-[140px] min-w-[140px] text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] shadow-[0_1px_0_#f1f5f9] dark:shadow-[0_1px_0_#1e293b] align-top">
                         <div className="mb-3">PAM Onboarding</div>
                       </th>
-                      {DEFAULT_HEADERS.map(h => (
-                        <th key={h} className="sticky top-0 bg-white z-20 text-left px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] whitespace-nowrap shadow-[0_1px_0_#f1f5f9] align-top">
+                      {visibleHeaders.map(h => {
+                        let stickyClass = "sticky top-0 bg-white dark:bg-slate-900 z-20";
+                        if (h === "ICTO") stickyClass = "sticky left-[218px] top-0 bg-white dark:bg-slate-900 z-30 w-[120px] min-w-[120px] border-l border-slate-50 dark:border-slate-800";
+                        if (h === "Name") stickyClass = "sticky left-[337px] top-0 bg-white dark:bg-slate-900 z-30 w-[250px] min-w-[250px] border-r border-slate-50 dark:border-slate-800 shadow-[6px_0_12px_-6px_rgba(0,0,0,0.04),0_1px_0_#f1f5f9] dark:shadow-[6px_0_12px_-6px_rgba(0,0,0,0.04),0_1px_0_#1e293b]";
+                        
+                        return (
+                        <th key={h} className={`${stickyClass} text-left px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] whitespace-nowrap shadow-[0_1px_0_#f1f5f9] dark:shadow-[0_1px_0_#1e293b] align-top`}>
                           <div className="mb-3 block">{h}</div>
                           <input 
                             type="text" 
-                            className="w-full p-2 bg-slate-50 border border-slate-200 rounded-md text-xs font-medium text-slate-600 focus:ring-2 focus:ring-indigo-500 outline-none normal-case tracking-normal placeholder:text-slate-300"
+                            className="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md text-xs font-medium text-slate-600 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500 outline-none normal-case tracking-normal placeholder:text-slate-300 dark:placeholder:text-slate-500"
                             placeholder={`Filter ${h}...`}
                             value={filters[h] || ''}
                             onChange={e => setFilters(prev => ({...prev, [h]: e.target.value}))}
                           />
                         </th>
-                      ))}
+                      )})}
+                      <th className="sticky top-0 bg-white dark:bg-slate-900 z-20 px-2 py-4 text-center shadow-[0_1px_0_#f1f5f9] dark:shadow-[0_1px_0_#1e293b] align-top w-12">
+                        <button 
+                            onClick={() => setIsTableExpanded(!isTableExpanded)}
+                            className="p-2 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-indigo-600 transition-colors mt-1"
+                            title={isTableExpanded ? "Spalten einklappen" : "Spalten ausklappen"}
+                        >
+                            <ChevronRight className={`w-5 h-5 transition-transform ${isTableExpanded ? 'rotate-180' : ''}`} />
+                        </button>
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-50">
                     {filteredData.length === 0 ? (
                       <tr>
-                        <td colSpan={DEFAULT_HEADERS.length + 2} className="py-24 text-center">
+                        <td colSpan={visibleHeaders.length + 3} className="py-24 text-center">
                           <div className="flex flex-col items-center gap-3">
                             {loading ? (
                               <RefreshCw className="w-10 h-10 text-indigo-200 animate-spin" />
@@ -2954,8 +3130,8 @@ const App = () => {
                         </td>
                       </tr>
                     ) : filteredData.map((row, i) => (
-                      <tr key={row.id || i} className="hover:bg-indigo-50/30 transition-colors group">
-                        <td className="sticky left-0 bg-white group-hover:bg-indigo-50/50 z-10 px-4 py-4 text-center w-[80px] whitespace-nowrap">
+                      <tr key={row.id || i} className="hover:bg-indigo-50/30 dark:hover:bg-indigo-900/20 transition-colors group">
+                        <td className="sticky left-0 bg-white dark:bg-slate-900 group-hover:bg-indigo-50/50 dark:group-hover:bg-indigo-900/50 z-10 px-4 py-4 text-center w-[80px] min-w-[80px] whitespace-nowrap">
                           <button 
                             onClick={() => { setEditingRow(row); setIsModalOpen(true); setViewMode('form'); }} 
                             className="p-2.5 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-md transition-all shadow-sm hover:shadow-md active:scale-90"
@@ -2964,7 +3140,7 @@ const App = () => {
                             <FileCog className="w-5 h-5" />
                           </button>
                         </td>
-                        <td className="sticky left-[80px] bg-white group-hover:bg-indigo-50/50 z-10 px-4 py-4 text-center border-r border-slate-50 shadow-[6px_0_12px_-6px_rgba(0,0,0,0.04)] whitespace-nowrap">
+                        <td className="sticky left-[80px] bg-white dark:bg-slate-900 group-hover:bg-indigo-50/50 dark:group-hover:bg-indigo-900/50 z-10 px-4 py-4 text-center w-[140px] min-w-[140px] whitespace-nowrap">
                           <button 
                             onClick={() => { setUnifiedRow(row); setInitialTab('onboarding'); setModalMode('pam'); }} 
                             className="p-2.5 text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-md transition-all shadow-sm hover:shadow-md active:scale-90"
@@ -2980,14 +3156,19 @@ const App = () => {
                             <KeyRound className="w-5 h-5" />
                           </button>
                         </td>
-                        {DEFAULT_HEADERS.map(h => {
+                        {visibleHeaders.map(h => {
                           const isTech = ["ICTO", "tAV"].includes(h);
+                          let stickyClass = "";
+                          if (h === "ICTO") stickyClass = "sticky left-[218px] bg-white dark:bg-slate-900 group-hover:bg-indigo-50/50 dark:group-hover:bg-indigo-900/50 z-10 w-[120px] min-w-[120px] border-l border-slate-50 dark:border-slate-800";
+                          if (h === "Name") stickyClass = "sticky left-[337px] bg-white dark:bg-slate-900 group-hover:bg-indigo-50/50 dark:group-hover:bg-indigo-900/50 z-10 w-[250px] min-w-[250px] border-r border-slate-50 dark:border-slate-800 shadow-[6px_0_12px_-6px_rgba(0,0,0,0.04)]";
+
                           return (
-                            <td key={h} className={`px-8 py-5 text-sm font-bold text-slate-600 whitespace-nowrap max-w-md overflow-hidden text-ellipsis ${isTech ? 'font-mono text-indigo-500/80' : ''}`}>
+                            <td key={h} className={`px-8 py-5 text-sm font-bold text-slate-600 dark:text-slate-300 whitespace-nowrap max-w-md overflow-hidden text-ellipsis ${isTech ? 'font-mono text-indigo-500/80 dark:text-indigo-400' : ''} ${stickyClass}`}>
                               {row[h] || <span className="text-slate-200">/</span>}
                             </td>
                           );
                         })}
+                        <td className="px-2 py-5 whitespace-nowrap"></td>
                       </tr>
                     ))}
                   </tbody>
@@ -3001,10 +3182,10 @@ const App = () => {
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-10">
           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-xl transition-opacity" onClick={() => setIsModalOpen(false)}></div>
-          <div className="relative bg-white w-full max-w-5xl rounded-xl shadow-[0_32px_64px_-16px_rgba(0,0,0,0.2)] flex flex-col max-h-[94vh] border border-slate-200 overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="px-10 py-8 border-b border-slate-50 flex justify-between items-center bg-white sticky top-0 z-10">
+          <div className="relative bg-white dark:bg-slate-900 w-full max-w-5xl rounded-xl shadow-[0_32px_64px_-16px_rgba(0,0,0,0.2)] flex flex-col max-h-[94vh] border border-slate-200 dark:border-slate-800 overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="px-10 py-8 border-b border-slate-50 dark:border-slate-800 flex justify-between items-center bg-white dark:bg-slate-900 sticky top-0 z-10">
               <div>
-                <h2 className="text-3xl font-black tracking-tighter text-slate-900">
+                <h2 className="text-3xl font-black tracking-tighter text-slate-900 dark:text-white">
                   {editingRow?.id ? 'Status Onboarding' : 'Neue Erfassung'}
                 </h2>
                 <div className="flex items-center gap-2 mt-1.5">
@@ -3024,14 +3205,14 @@ const App = () => {
                   </button>
                   <button 
                     onClick={() => viewMode === 'history' ? setViewMode('form') : handleFetchHistory(editingRow.id)}
-                    className={`p-3 rounded-lg transition-all group ${viewMode === 'history' ? 'bg-indigo-50 text-indigo-600' : 'hover:bg-slate-50 text-slate-300 hover:text-slate-600'}`}
+                    className={`p-3 rounded-lg transition-all group ${viewMode === 'history' ? 'bg-indigo-50 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400' : 'hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-300 hover:text-slate-600'}`}
                     title="Änderungshistorie"
                   >
                     <HistoryIcon className="w-6 h-6" />
                   </button>
                   </>
                 )}
-              <button onClick={() => setIsModalOpen(false)} className="p-3 hover:bg-slate-50 rounded-lg transition-all group">
+              <button onClick={() => setIsModalOpen(false)} className="p-3 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-all group">
                 <X className="w-7 h-7 text-slate-300 group-hover:text-slate-600" />
               </button>
               </div>
@@ -3039,17 +3220,17 @@ const App = () => {
             
             {viewMode === 'history' ? (
               <div className="flex-1 overflow-y-auto p-10 custom-scrollbar">
-                <h3 className="text-xl font-bold mb-6 flex items-center gap-2 text-slate-800">
+                <h3 className="text-xl font-bold mb-6 flex items-center gap-2 text-slate-800 dark:text-slate-200">
                   <Clock className="w-6 h-6 text-indigo-500" /> Änderungsprotokoll
                 </h3>
-                <PaginatedHistoryList history={history} cardClassName="bg-slate-50 p-5 rounded-lg border border-slate-100 hover:border-indigo-100 transition-colors" />
+                <PaginatedHistoryList history={history} cardClassName="bg-slate-50 dark:bg-slate-800 p-5 rounded-lg border border-slate-100 dark:border-slate-700 hover:border-indigo-100 transition-colors" />
               </div>
             ) : (
               <form onSubmit={handleSave} className="flex-1 overflow-y-auto p-10 space-y-16 custom-scrollbar">
                 {FIELD_GROUPS.map((group, idx) => (
                   <div key={idx} className="space-y-8">
-                    <div className="flex items-center gap-4 border-b border-slate-100 pb-4">
-                      <div className="p-2.5 bg-slate-50 rounded-lg shadow-inner">{group.icon}</div>
+                    <div className="flex items-center gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
+                      <div className="p-2.5 bg-slate-50 dark:bg-slate-800 rounded-lg shadow-inner">{group.icon}</div>
                       <h3 className="text-xs font-black uppercase tracking-[0.25em] text-slate-500">{group.title}</h3>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8 px-2">
@@ -3059,14 +3240,14 @@ const App = () => {
                 ))}
 
                 {/* Abnahme Bereich */}
-                <div className="space-y-8 border-t border-slate-100 pt-8">
+                <div className="space-y-8 border-t border-slate-100 dark:border-slate-800 pt-8">
                     <div className="flex items-center gap-4">
-                        <div className="p-2.5 bg-slate-50 rounded-lg shadow-inner"><CheckCircle className="w-5 h-5 text-emerald-500" /></div>
+                        <div className="p-2.5 bg-slate-50 dark:bg-slate-800 rounded-lg shadow-inner"><CheckCircle className="w-5 h-5 text-emerald-500" /></div>
                         <h3 className="text-xs font-black uppercase tracking-[0.25em] text-slate-500">Abnahme PAM Onboarding</h3>
                     </div>
                     
                     {editingRow?.AbnahmePAMOnboarding ? (
-                        <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-6 flex items-center justify-between gap-4">
+                        <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800 rounded-xl p-6 flex items-center justify-between gap-4">
                             <div className="flex items-center gap-4">
                                 <div className="bg-emerald-100 p-3 rounded-full">
                                     <CheckCircle className="w-8 h-8 text-emerald-600" />
@@ -3086,11 +3267,11 @@ const App = () => {
                         </div>
                     ) : (
                         (role === 'maintenance') ? (
-                            <div className="bg-slate-50 border border-slate-100 rounded-xl p-6">
-                                <p className="text-slate-500 mb-4 text-sm">Bitte bestätigen Sie die korrekte Umsetzung der CyberArk Anbindung nach erfolgreichem Test.</p>
+                            <div className="bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl p-6">
+                                <p className="text-slate-500 dark:text-slate-400 mb-4 text-sm">Bitte bestätigen Sie die korrekte Umsetzung der CyberArk Anbindung nach erfolgreichem Test.</p>
                                 <button type="button" onClick={handleAcceptance} className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg shadow-lg shadow-emerald-100 transition-all active:scale-[0.98] flex justify-center items-center gap-2"><CheckCircle className="w-5 h-5" /> Abnahme erteilen</button>
                             </div>
-                        ) : <div className="p-4 text-center text-slate-400 italic bg-slate-50 rounded-xl border border-slate-100">Abnahme noch ausstehend.</div>
+                        ) : <div className="p-4 text-center text-slate-400 italic bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700">Abnahme noch ausstehend.</div>
                     )}
                 </div>
 
@@ -3098,21 +3279,24 @@ const App = () => {
               </form>
             )}
 
-            <div className="p-10 bg-white/80 backdrop-blur-md border-t border-slate-50 flex justify-end gap-5 sticky bottom-0 z-10">
-              <button type="button" onClick={() => setIsModalOpen(false)} className="px-8 py-4 font-extrabold text-slate-400 hover:text-slate-600 transition-colors">Abbrechen</button>
+            <div className="p-10 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-t border-slate-50 dark:border-slate-800 flex justify-end gap-5 sticky bottom-0 z-10">
+              <button type="button" onClick={() => setIsModalOpen(false)} className="px-8 py-4 font-extrabold text-slate-400 hover:text-slate-600 transition-colors">Schließen</button>
               {viewMode === 'form' && (
               !isReadOnly && (
               <button 
                 type="submit" 
                 onClick={handleSave}
                 disabled={saveStatus === 'saving'}
-                className={`px-14 py-4 rounded-lg font-black text-white flex items-center gap-3 transition-all shadow-2xl active:scale-[0.97] ${
-                  saveStatus === 'success' ? 'bg-emerald-500 shadow-emerald-200' : 'bg-slate-900 hover:bg-black shadow-slate-200'
+                className={`px-8 py-3 font-bold rounded-lg shadow-lg transition-all active:scale-95 flex items-center gap-2 ${
+                    saveStatus === 'success' 
+                    ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-200' 
+                    : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-200'
                 }`}
               >
-                {saveStatus === 'saving' ? <RefreshCw className="w-5 h-5 animate-spin" /> : 
-                 saveStatus === 'success' ? <CheckCircle className="w-5 h-5 stroke-[3px]" /> : <Save className="w-5 h-5 stroke-[2.5px]" />}
-                {saveStatus === 'success' ? 'FERTIG!' : (editingRow?.id ? 'ÄNDERUNGEN SPEICHERN' : 'EINTRAG ANLEGEN')}
+                {saveStatus === 'saving' ? <RefreshCw className="animate-spin w-5 h-5" /> : 
+                 saveStatus === 'success' ? <CheckCircle className="w-5 h-5" /> : 
+                 <Save className="w-5 h-5" />} 
+                {saveStatus === 'success' ? 'Gespeichert' : 'Speichern'}
               </button>
               )
               )}
